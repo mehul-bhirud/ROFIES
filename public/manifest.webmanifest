@@ -1,0 +1,17 @@
+{
+  "name": "R.O.F.I.E.S Equipment Manager",
+  "short_name": "R.O.F.I.E.S",
+  "description": "Robotics equipment catalog and circulation manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f8f8",
+  "theme_color": "#007f95",
+  "icons": [
+    {
+      "src": "/rofies-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

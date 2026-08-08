@@ -1,0 +1,13 @@
+begin;
+select plan(5);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
+select is_empty($$select * from api.approval_queue(10)$$,'members cannot read the approval queue');
+select is_empty($$select * from api.handover_queue(10)$$,'members cannot read the handover queue');
+select is_empty($$select * from api.return_queue(10)$$,'members cannot read the return queue');
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
+select ok((select count(*)>0 from api.approval_queue(10)),'approver receives pending request lines');
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+select ok((select count(*)>0 from api.handover_queue(10)) and (select count(*)>0 from api.return_queue(10)),'inventory staff receive physical operation queues');
+select * from finish();
+rollback;
