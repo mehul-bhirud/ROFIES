@@ -6,7 +6,7 @@ const environmentSchema = z
     NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(16).optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(16).optional(),
-    ROFIES_ALLOWED_EMAIL_DOMAINS: z.string().default("iiitp.ac.in"),
+    ROFIES_ALLOWED_EMAIL_DOMAINS: z.string().default("iiitp.ac.in,ece.iiitp.ac.in,cse.iiitp.ac.in"),
     ROFIES_APP_ORIGIN: z.string().optional(),
     ROFIES_ENVIRONMENT: z.enum(["local", "test", "preview", "production"]).default("local"),
     ROFIES_DEMO_MODE: z.enum(["true", "false"]).default("true"),
