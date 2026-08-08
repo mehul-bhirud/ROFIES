@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
   if (data.user && isPageRequest && !isPublicApplicationPath(pathname)) {
     const { data: statusData, error } = await client.schema("api").rpc("member_application_status");
     const status = error ? null : parseMemberApplicationStatus(statusData);
-    const allowedDomains = (process.env.ROFIES_ALLOWED_EMAIL_DOMAINS ?? "iiitp.ac.in")
+    const allowedDomains = (process.env.ROFIES_ALLOWED_EMAIL_DOMAINS ?? "iiitp.ac.in,ece.iiitp.ac.in,cse.iiitp.ac.in")
       .split(",")
       .map((domain) => domain.trim())
       .filter(Boolean);

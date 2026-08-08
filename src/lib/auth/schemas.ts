@@ -53,7 +53,7 @@ export const updatePasswordSchema = z
     path: ["confirmPassword"]
   });
 
-const defaultAllowedDomains = ["iiitp.ac.in"] as const;
+const defaultAllowedDomains = ["iiitp.ac.in", "ece.iiitp.ac.in", "cse.iiitp.ac.in"] as const;
 
 export const signUpSchema = createSignUpSchema(defaultAllowedDomains);
 export const signInSchema = createSignInSchema(defaultAllowedDomains);

@@ -15,3 +15,6 @@ supabase/.temp/
 *.tsbuildinfo
 docs/verification-artifacts/*.tmp
 .superpowers/
+
+.vercel
+.env*
