@@ -4,5 +4,6 @@
       "path": "/api/jobs/retention",
       "schedule": "0 2 * * *"
     }
-  ]
+  ],
+  "framework": "nextjs"
 }
