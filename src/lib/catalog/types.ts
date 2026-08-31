@@ -22,4 +22,5 @@ export interface OperationalSummary {
   overdueLoans: number;
   repairQueue: number;
   retentionFailures: number;
+  pendingPasswordResetRequests: number;
 }

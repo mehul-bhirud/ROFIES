@@ -16,7 +16,7 @@
 ### Protected assets
 
 - Institutional identities and contact information.
-- Password-authentication sessions, confirmation/recovery tokens, member applications, and college-ID documents.
+- Password-authentication sessions, confirmation tokens, manual recovery requests, member applications, and college-ID documents.
 - Borrower history and current custody.
 - Inventory quantities, condition, location, cost, and photographs.
 - Staff roles and policy settings.
@@ -55,7 +55,8 @@
 - Use Supabase password hashing, strong-password settings, leaked-password protection where available, email confirmation, and PKCE-compatible SSR flows.
 - Use generic signup, login, and recovery responses that do not disclose whether an account exists.
 - Rate-limit signup, login, confirmation resend, recovery, and password changes by safe combinations of IP, account, and server-side context.
-- Send only authentication confirmation, recovery, and security messages through institution SMTP; never place application data in those messages.
+- Send only authentication confirmation and security messages through institution SMTP when enabled; never place application data in those messages.
+- Manual password recovery requests are admin-visible only, use generic public acknowledgements, and allow administrators to set a new temporary password only after manual identity verification. Existing passwords and temporary passwords must never be stored in application tables, audit rows, logs, or notifications.
 - Use secure, HTTP-only, SameSite cookies as supported by the chosen auth flow.
 - Rotate/refresh sessions through supported provider mechanisms.
 - Recheck active account, membership, and staff permissions on protected commands.

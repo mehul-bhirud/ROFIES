@@ -54,7 +54,7 @@ Privileged roles are composable. Authorization is checked in the UI, in server-s
 
 ### Included
 
-- Supabase email/password authentication restricted to configured institution domains, with email confirmation and password recovery through institution SMTP.
+- Supabase email/password authentication restricted to configured institution domains, with email confirmation. Password recovery uses a manual, admin-reviewed reset request queue when auth SMTP is unavailable.
 - Profile onboarding and private college-ID upload followed by an admin decision that simultaneously verifies identity and activates club membership.
 - Searchable catalog with photographs, aliases, tags, specifications, remarks, condition, and availability.
 - Pooled reusable, individual-asset, and consumable tracking.
@@ -72,7 +72,7 @@ Privileged roles are composable. Authorization is checked in the UI, in server-s
 - Camera workflows and QR/barcode scanning.
 - Native Android or iOS applications.
 - SMS and WhatsApp notifications.
-- Application-event email notifications; email is reserved for authentication confirmation, recovery, and security notices.
+- Application-event email notifications; email is reserved for authentication confirmation and security notices when Supabase Auth email is enabled.
 - Payments, deposits, automated fines, or monetary penalties.
 - Offline inventory mutations.
 - Advanced predictive analytics.
@@ -95,6 +95,7 @@ The registration lifecycle is:
 - Every admin document view and verification decision is audit logged without logging document contents or access URLs.
 - A final approval or rejection schedules the image for deletion after 30 days. The object is deleted automatically while the non-image decision and audit history remain.
 - Authentication errors do not reveal whether an email is already registered. Signup, login, recovery, upload, document access, resubmission, and decisions are rate limited.
+- Forgot-password submissions create a manual reset request visible only to roles/system administrators. Administrators may generate a new temporary password after manual identity verification; existing passwords are never visible or stored in application tables.
 
 ## 5. Inventory
 
@@ -202,7 +203,7 @@ Configurable low-value consumables may use a counter-issue flow in which an inve
 
 ## 8. Notifications
 
-Application notifications are in-app only. Authentication confirmation, recovery, and security email is handled separately by Supabase Auth through institution SMTP.
+Application notifications are in-app only. Authentication confirmation and security email are handled separately by Supabase Auth when SMTP is enabled. Password recovery is handled through the admin-reviewed manual reset queue.
 
 Events include membership decisions, request changes, approval/rejection, pickup readiness, reservation expiry, upcoming due date, overdue status, extension decision, cancellation, waitlist opportunity, repair-related availability changes, and system notices.
 

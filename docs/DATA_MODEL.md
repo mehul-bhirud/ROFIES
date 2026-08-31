@@ -13,6 +13,7 @@ Define the relational shape and integrity intent. Names are normative enough to 
 - `college_id_documents`: application/owner, private bucket/object reference, processed media metadata, checksum, upload time, retention deadline, deletion time, and replacement linkage. Image bytes are not stored in PostgreSQL.
 - `memberships`: member status, activation actor/time, suspension/former metadata, and reason. Application approval and membership activation occur atomically.
 - `role_assignments`: user, permission role, granting admin, grant/revoke timestamps.
+- `password_reset_requests`: normalized institutional email, request status, request timestamp, processing administrator, processing timestamp, and bounded verification note. No password, password hash, recovery token, or temporary password is stored.
 
 Institutional email is normalized and uniquely indexed. Authorization must not rely on editable profile fields. A submitted application requires a confirmed Supabase Auth email and a current processed college-ID document.
 

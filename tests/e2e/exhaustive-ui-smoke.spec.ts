@@ -20,6 +20,7 @@ const routes = [
   "/auth/check-email",
   "/auth/error?code=permission_denied",
   "/admin",
+  "/admin/account-recovery",
   "/admin/approvals",
   "/admin/handover",
   "/admin/inventory",

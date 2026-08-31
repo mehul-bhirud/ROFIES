@@ -5,6 +5,7 @@ import {
   Boxes,
   CheckCircle2,
   Clock3,
+  KeyRound,
   RotateCcw,
   UserRoundCheck
 } from "lucide-react";
@@ -13,7 +14,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getStaffDashboard } from "@/lib/operations/queries";
 
 export default async function AdminDashboardPage() {
-  const { summary, approvals, activity } = await getStaffDashboard();
+  const { summary, approvals, passwordResetRequests, activity } = await getStaffDashboard();
   const metrics = [
     {
       label: "Pending approval",
@@ -44,6 +45,12 @@ export default async function AdminDashboardPage() {
       value: summary.repairQueue,
       note: "excluded from availability",
       icon: RotateCcw
+    },
+    {
+      label: "Password resets",
+      value: summary.pendingPasswordResetRequests,
+      note: "manual admin review",
+      icon: KeyRound
     }
   ];
   return (
@@ -117,6 +124,33 @@ export default async function AdminDashboardPage() {
             </ul>
           ) : (
             <p className="muted">No requests await approval.</p>
+          )}
+        </section>
+        <section className="panel" aria-labelledby="recovery-heading">
+          <div className="panel-head">
+            <div>
+              <h2 id="recovery-heading">Account recovery</h2>
+              <p>Pending manual password reset requests.</p>
+            </div>
+            <Link href="/admin/account-recovery" className="text-link">
+              Open recovery
+            </Link>
+          </div>
+          {passwordResetRequests.length ? (
+            <ul className="record-list">
+              {passwordResetRequests.slice(0, 5).map((request) => (
+                <li key={request.id}>
+                  <div>
+                    <span className="data-id">{request.id.slice(0, 8).toUpperCase()}</span>
+                    <h3>{request.institutionalEmail}</h3>
+                    <p>Requested {request.requestedAt}</p>
+                  </div>
+                  <StatusBadge tone="warning">{request.status}</StatusBadge>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No password reset requests are pending.</p>
           )}
         </section>
         <section className="panel" aria-labelledby="activity-heading">

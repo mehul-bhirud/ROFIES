@@ -10,6 +10,10 @@ import {
   updatePasswordSchema
 } from "@/lib/auth/schemas";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import {
+  manualRecoveryMessage,
+  queueManualPasswordResetRequest
+} from "@/lib/auth/manual-password-reset";
 
 export type AuthActionState = {
   ok: boolean;
@@ -20,8 +24,6 @@ export type AuthActionState = {
 const initialState: AuthActionState = { ok: false, message: "" };
 const genericSignupMessage =
   "If this address can be registered, check your inbox for a confirmation link.";
-const genericRecoveryMessage =
-  "If an account can use this address, check your inbox for password reset instructions.";
 const unavailableMessage = "Authentication is temporarily unavailable. Try again.";
 
 function actionFormData(first: AuthActionState | FormData, second?: FormData) {
@@ -157,17 +159,15 @@ export async function requestPasswordResetAction(
   );
   if (!parsed.success) return invalidResult(parsed.error);
 
-  if (env.demoMode) return { ok: true, message: genericRecoveryMessage };
-  const client = await createSupabaseServerClient();
+  if (env.demoMode) return { ok: true, message: manualRecoveryMessage };
+  const client = createSupabaseServiceClient();
   if (!client) return { ok: false, message: unavailableMessage };
   try {
-    await client.auth.resetPasswordForEmail(parsed.data.email, {
-      redirectTo: confirmationUrl(env.ROFIES_APP_ORIGIN)
-    });
+    await queueManualPasswordResetRequest(client, parsed.data.email);
   } catch {
     // Deliberately return the same acknowledgement for provider and account states.
   }
-  return { ok: true, message: genericRecoveryMessage };
+  return { ok: true, message: manualRecoveryMessage };
 }
 
 export async function updatePasswordAction(formData: FormData): Promise<AuthActionState>;

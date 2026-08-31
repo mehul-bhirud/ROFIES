@@ -165,7 +165,8 @@ export const demoSummary: OperationalSummary = {
   readyPickups: 4,
   overdueLoans: 3,
   repairQueue: 5,
-  retentionFailures: 0
+  retentionFailures: 0,
+  pendingPasswordResetRequests: 1
 };
 
 export const demoActivity = [

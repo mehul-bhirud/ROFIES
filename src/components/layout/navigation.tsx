@@ -10,6 +10,7 @@ import {
   Gauge,
   HandCoins,
   Home,
+  KeyRound,
   RotateCcw,
   ShieldCheck,
   UserRoundCheck
@@ -27,6 +28,7 @@ const staffLinks = [
   { href: "/admin", label: "Operations", icon: Gauge },
   { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/admin/members", label: "Members", icon: UserRoundCheck },
+  { href: "/admin/account-recovery", label: "Recovery", icon: KeyRound },
   { href: "/admin/handover", label: "Handover", icon: HandCoins },
   { href: "/admin/returns", label: "Returns", icon: RotateCcw },
   { href: "/admin/inventory", label: "Inventory", icon: Boxes }

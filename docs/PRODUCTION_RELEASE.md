@@ -15,7 +15,7 @@ Do not run `supabase/seed.sql` against production. Seed data is fictional local/
 - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the production Supabase project.
 - Set `SUPABASE_SERVICE_ROLE_KEY` only in server-side Vercel environment variables.
 - Set a strong `CRON_SECRET` only in server-side Vercel environment variables.
-- Configure Supabase Auth email/password with institution SMTP, email confirmation, site URL, allowed redirect URLs, and password protections.
+- Configure Supabase Auth email/password, site URL, allowed redirect URLs, and password protections. If email confirmation is enabled, configure institution SMTP. Password recovery uses the admin-reviewed manual reset queue.
 - Keep `college-ids` and `equipment-photos` storage buckets private.
 - Schedule `POST /api/jobs/retention` with `Authorization: Bearer <CRON_SECRET>`.
 - Configure backups, storage retention expectations, and alert destinations before admitting real users.
@@ -107,16 +107,17 @@ Do not run `supabase/seed.sql` against production. Seed data is fictional local/
 3. `system:manage` can view operational health, notices, policy/system surfaces, and retention status.
 4. High-risk actions require recent authentication by policy.
 5. These roles must be granted only to trusted production administrators.
+6. `system:manage` and `roles:manage` can review manual password reset requests and generate one-time temporary passwords after manual identity verification.
 
 ## Password and Access Storage
 
-Application tables do not store plaintext passwords. Supabase Auth owns password storage in `auth.users.encrypted_password`, which is provider-managed hashed password data. Application access is controlled separately through membership state and `public.role_assignments`.
+Application tables do not store plaintext passwords. Supabase Auth owns password storage in `auth.users.encrypted_password`, which is provider-managed hashed password data. Application access is controlled separately through membership state and `public.role_assignments`. Manual reset requests store only the requesting institutional email and processing metadata; administrators can generate a new temporary password, but the old password is never visible.
 
 ## Post-Deploy Smoke
 
 After deployment, test these with real production configuration:
 
-1. Sign up with an institutional email and confirm it.
+1. Sign up with an institutional email and confirm it if Supabase email confirmation is enabled.
 2. Submit onboarding with a small valid college-ID image.
 3. Approve that application as a membership manager.
 4. Submit a borrowing request as the approved member.
@@ -126,3 +127,4 @@ After deployment, test these with real production configuration:
 8. Confirm private college-ID access is audited and no document URL is exposed.
 9. Confirm `/api/jobs/retention` returns 404 without the secret and succeeds with the scheduler secret.
 10. Confirm production has no demo/sample users unless deliberately created through real signup.
+11. Submit forgot-password and confirm it appears in `/admin/account-recovery`; process it as a roles/system administrator and verify no temporary password is persisted in database rows or logs.

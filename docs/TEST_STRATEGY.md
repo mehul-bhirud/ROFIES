@@ -32,7 +32,7 @@
 
 ### Integration
 
-- Email/password signup, confirmation, login, logout, recovery, password update, institutional-domain denial, and account-enumeration-safe responses.
+- Email/password signup, confirmation, login, logout, manual password recovery request, admin temporary-password generation, password update, institutional-domain denial, and account-enumeration-safe responses.
 - Profile/college-ID onboarding, pending access restrictions, admin document access, approval with atomic membership activation, change request/resubmission, rejection, suspension, and deactivation.
 - Full and partial approval.
 - Reservation creation, expiry, cancellation, and conflict.
@@ -97,7 +97,7 @@ Critical desktop and mobile journeys:
 - Maintenance mode blocks mutations and preserves safe reads.
 - Backup restoration into isolation followed by integrity checks.
 - ID-retention cleanup delay/retry and alert behavior.
-- Institution SMTP outage behavior for confirmation/recovery and storage provider timeout/malformed response handling.
+- Institution SMTP outage behavior for confirmation/security mail, manual recovery queue handling, and storage provider timeout/malformed response handling.
 - Log/trace redaction tests.
 - Post-deploy smoke tests.
 

@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   resetPasswordForEmail: vi.fn(),
   updateUser: vi.fn(),
   signOut: vi.fn(),
+  serviceRpc: vi.fn(),
+  serviceSchema: vi.fn(),
   createSupabaseServerClient: vi.fn(),
   createSupabaseServiceClient: vi.fn(),
   provisionConfirmedApplicant: vi.fn(),
@@ -71,6 +73,8 @@ describe("password authentication server actions", () => {
     mocks.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
     mocks.updateUser.mockResolvedValue({ data: { user: { id: "user-1" } }, error: null });
     mocks.signOut.mockResolvedValue({ error: null });
+    mocks.serviceRpc.mockResolvedValue({ data: { id: "reset-1" }, error: null });
+    mocks.serviceSchema.mockReturnValue({ rpc: mocks.serviceRpc });
   });
 
   it("normalizes signup input and constructs confirmation redirects from the configured origin", async () => {
@@ -199,12 +203,16 @@ describe("password authentication server actions", () => {
     });
   });
 
-  it("keeps recovery acknowledgements generic and uses the trusted confirmation route", async () => {
+  it("keeps recovery acknowledgements generic and queues manual admin review", async () => {
+    mocks.createSupabaseServiceClient.mockReturnValueOnce({ schema: mocks.serviceSchema });
+
     const result = await requestPasswordResetAction(formData({ email: " STUDENT@IIITP.AC.IN " }));
 
     expect(result.ok).toBe(true);
-    expect(mocks.resetPasswordForEmail).toHaveBeenCalledWith("student@iiitp.ac.in", {
-      redirectTo: "https://equipment.iiitp.ac.in/auth/confirm"
+    expect(mocks.resetPasswordForEmail).not.toHaveBeenCalled();
+    expect(mocks.serviceSchema).toHaveBeenCalledWith("api");
+    expect(mocks.serviceRpc).toHaveBeenCalledWith("request_manual_password_reset", {
+      requested_email: "student@iiitp.ac.in"
     });
   });
 

@@ -35,9 +35,9 @@ const copy = {
   },
   "forgot-password": {
     eyebrow: "Account recovery",
-    title: "Request a secure reset link.",
-    description: "Enter your institutional email. The response is the same for every address.",
-    submit: "Send reset instructions"
+    title: "Request admin password reset.",
+    description: "Enter your institutional email. A club administrator will review the request.",
+    submit: "Request password reset"
   },
   "update-password": {
     eyebrow: "Choose a new password",

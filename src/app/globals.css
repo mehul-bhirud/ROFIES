@@ -1331,6 +1331,44 @@ fieldset legend {
   background: var(--danger-soft);
   color: var(--danger);
 }
+.recovery-request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.recovery-request-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.recovery-request-form label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.recovery-request-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+.temporary-password-box {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+.temporary-password-box span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: inherit;
+}
+.temporary-password-box code {
+  overflow-wrap: anywhere;
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-data);
+  font-size: 0.86rem;
+}
 
 .member-review-list {
   display: grid;

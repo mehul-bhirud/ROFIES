@@ -54,9 +54,9 @@ test("student can move through demo auth, onboarding, and pending lockout @criti
 test("password recovery uses the same generic acknowledgement", async ({ page }) => {
   await page.goto("/auth/forgot-password");
   await page.getByLabel("Institutional email").fill("unknown.student@iiitp.ac.in");
-  await page.getByRole("button", { name: "Send reset instructions" }).click();
+  await page.getByRole("button", { name: "Request password reset" }).click();
   await expect(
-    page.getByRole("heading", { name: "Check your institutional inbox." })
+    page.getByRole("heading", { name: "Your reset request is with the club team." })
   ).toBeVisible();
   await expect(page.getByText("If an account can use that address")).toBeVisible();
 });

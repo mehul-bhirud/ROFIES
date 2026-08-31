@@ -59,6 +59,12 @@ export interface AccountContext {
   unreadNotifications: number;
   environmentLabel: string;
 }
+export interface PasswordResetRequestRecord {
+  id: string;
+  institutionalEmail: string;
+  requestedAt: string;
+  status: string;
+}
 
 const dateTime = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
@@ -315,6 +321,7 @@ export const getStaffDashboard = cache(
   async (): Promise<{
     summary: OperationalSummary;
     approvals: ApprovalRecord[];
+    passwordResetRequests: PasswordResetRequestRecord[];
     activity: readonly ActivityRecord[];
   }> => {
     const client = await apiClient();
@@ -322,11 +329,20 @@ export const getStaffDashboard = cache(
       return {
         summary: demoSummary,
         approvals: await getApprovalWorkbench(),
+        passwordResetRequests: [
+          {
+            id: "00000000-0000-0000-0000-000000000701",
+            institutionalEmail: "student@iiitp.ac.in",
+            requestedAt: "12 min ago",
+            status: "pending"
+          }
+        ],
         activity: demoActivity
       };
-    const [{ data, error }, approvals, audit] = await Promise.all([
+    const [{ data, error }, approvals, passwordResetRequests, audit] = await Promise.all([
       client.schema("api").rpc("staff_dashboard"),
       getApprovalWorkbench(),
+      getManualPasswordResetQueue(),
       client
         .from("audit_events")
         .select("action,reason,created_at")
@@ -342,9 +358,11 @@ export const getStaffDashboard = cache(
         readyPickups: Number(row.ready_pickups),
         overdueLoans: Number(row.overdue_loans),
         repairQueue: Number(row.repair_queue),
-        retentionFailures: 0
+        retentionFailures: 0,
+        pendingPasswordResetRequests: passwordResetRequests.length
       },
       approvals,
+      passwordResetRequests,
       activity: (audit.data ?? []).map((event) => ({
         time: dateTime.format(new Date(event.created_at)),
         action: String(event.action).replaceAll(".", " "),
@@ -352,6 +370,34 @@ export const getStaffDashboard = cache(
         actor: "authorized operator"
       }))
     };
+  }
+);
+
+export const getManualPasswordResetQueue = cache(
+  async (): Promise<PasswordResetRequestRecord[]> => {
+    const client = await apiClient();
+    if (!client)
+      return [
+        {
+          id: "00000000-0000-0000-0000-000000000701",
+          institutionalEmail: "student@iiitp.ac.in",
+          requestedAt: "12 min ago",
+          status: "pending"
+        }
+      ];
+    const { data, error } = await client
+      .from("password_reset_requests")
+      .select("id,institutional_email,requested_at,status")
+      .eq("status", "pending")
+      .order("requested_at", { ascending: true })
+      .limit(50);
+    if (error) return [];
+    return data.map((row) => ({
+      id: String(row.id),
+      institutionalEmail: String(row.institutional_email),
+      requestedAt: dateTime.format(new Date(row.requested_at)),
+      status: String(row.status).replaceAll("_", " ")
+    }));
   }
 );
 
