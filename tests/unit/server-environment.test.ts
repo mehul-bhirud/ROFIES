@@ -36,6 +36,15 @@ describe("server environment auth origin", () => {
     ).toThrow(/HTTPS/);
   });
 
+  it("treats Vercel production as production even when app environment is missing", () => {
+    expect(() =>
+      parseServerEnvironment({
+        VERCEL_ENV: "production",
+        ROFIES_APP_ORIGIN: "https://equipment.iiitp.ac.in"
+      })
+    ).toThrow(/ROFIES_ENVIRONMENT/);
+  });
+
   it.each([
     "https://user:secret@equipment.iiitp.ac.in",
     "https://equipment.iiitp.ac.in/auth",

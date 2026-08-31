@@ -34,6 +34,8 @@ describe("proxy applicant isolation", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "publishable-key-123456";
     process.env.ROFIES_DEMO_MODE = "false";
+    delete process.env.ROFIES_ENVIRONMENT;
+    delete process.env.VERCEL_ENV;
     mocks.state = "pending_review";
     mocks.membershipStatus = "inactive";
     mocks.emailConfirmedAt = "2026-08-08T10:00:00.000Z";
@@ -69,6 +71,14 @@ describe("proxy applicant isolation", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost:3000/pending");
     expect(mocks.rpc).toHaveBeenCalledWith("member_application_status");
+  });
+
+  it("fails closed when Vercel production is not marked as app production", async () => {
+    process.env.VERCEL_ENV = "production";
+    const response = await proxy(new NextRequest("https://equipment.iiitp.ac.in/"));
+
+    expect(response.status).toBe(503);
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
   it("allows the applicant only on the page matching their current state", async () => {

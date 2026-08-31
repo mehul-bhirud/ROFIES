@@ -11,9 +11,20 @@ const environmentSchema = z
     ROFIES_ENVIRONMENT: z.enum(["local", "test", "preview", "production"]).default("local"),
     ROFIES_DEMO_MODE: z.enum(["true", "false"]).default("true"),
     ROFIES_MAINTENANCE_MODE: z.enum(["true", "false"]).default("false"),
-    CRON_SECRET: z.string().min(16).optional()
+    CRON_SECRET: z.string().min(16).optional(),
+    VERCEL_ENV: z.enum(["development", "preview", "production"]).optional()
   })
   .superRefine((value, context) => {
+    const productionRuntime =
+      value.ROFIES_ENVIRONMENT === "production" || value.VERCEL_ENV === "production";
+    if (value.VERCEL_ENV === "production" && value.ROFIES_ENVIRONMENT !== "production") {
+      context.addIssue({
+        code: "custom",
+        path: ["ROFIES_ENVIRONMENT"],
+        message: "ROFIES_ENVIRONMENT must be production on Vercel production deployments"
+      });
+    }
+
     let appOrigin: URL | null = null;
     if (value.ROFIES_APP_ORIGIN) {
       try {
@@ -54,7 +65,7 @@ const environmentSchema = z
       });
     }
 
-    if (value.ROFIES_ENVIRONMENT === "production") {
+    if (productionRuntime) {
       if (appOrigin?.protocol !== "https:") {
         context.addIssue({
           code: "custom",

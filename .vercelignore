@@ -1,11 +1,13 @@
 .git
-.vercelignore
 .next
 node_modules
 playwright-report
 test-results
 coverage
 supabase/.temp
+
+*.log
+*.tsbuildinfo
 
 check-user.cjs
 confirm-user.cjs

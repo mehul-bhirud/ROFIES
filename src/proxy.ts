@@ -21,6 +21,13 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const demoMode = process.env.ROFIES_DEMO_MODE === "true";
+  const vercelProduction = process.env.VERCEL_ENV === "production";
+  const productionMisconfigured =
+    vercelProduction &&
+    (process.env.ROFIES_ENVIRONMENT !== "production" || demoMode || !url || !key);
+  if (productionMisconfigured) {
+    return secure(new NextResponse("Service unavailable", { status: 503 }));
+  }
   if (!url || !key || demoMode)
     return secure(NextResponse.next({ request: { headers: requestHeaders } }));
   let response = NextResponse.next({ request: { headers: requestHeaders } });
