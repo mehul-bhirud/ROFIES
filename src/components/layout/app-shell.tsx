@@ -18,6 +18,12 @@ export async function AppShell({
 }: PropsWithChildren<{ mode: "member" | "staff" }>) {
   const staff = mode === "staff";
   const account = await getAccountContext(mode);
+  const canSwitchWorkspace = [
+    "System administrator",
+    "Inventory manager",
+    "Request approver",
+    "Staff operator"
+  ].includes(account.roleLabel);
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -33,7 +39,14 @@ export async function AppShell({
             <small>Equipment manager</small>
           </span>
         </Link>
-        <div className="workspace-label">{staff ? "Staff workspace" : "Member workspace"}</div>
+        <div className="workspace-label">
+          {staff ? "Staff workspace" : "Member workspace"}
+          {canSwitchWorkspace ? (
+            <Link href={staff ? "/" : "/admin"} className="workspace-switcher">
+              Switch to {staff ? "Member" : "Staff"} workspace &rarr;
+            </Link>
+          ) : null}
+        </div>
         <Navigation mode={mode} />
         <div className="sidebar-foot">
           <span className="system-pulse" aria-hidden="true" />

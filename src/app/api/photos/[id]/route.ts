@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { postgresUuidSchema } from "@/lib/validation/uuid";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const parsed = z.uuid().safeParse((await context.params).id);
+  const parsed = postgresUuidSchema.safeParse((await context.params).id);
   if (!parsed.success)
     return NextResponse.json({ message: "Resource unavailable" }, { status: 404 });
   const client = await createSupabaseServerClient();

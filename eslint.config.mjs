@@ -10,6 +10,12 @@ export default defineConfig([
     "node_modules/**",
     "playwright-report/**",
     "test-results/**",
-    "supabase/.temp/**"
+    "supabase/.temp/**",
+    "check-user.cjs",
+    "confirm-user.cjs",
+    "create-user.cjs",
+    "make-admin.cjs",
+    "test-signup.cjs",
+    "sign_up.html"
   ])
 ]);

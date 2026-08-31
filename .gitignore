@@ -16,5 +16,13 @@ supabase/.temp/
 docs/verification-artifacts/*.tmp
 .superpowers/
 
+# Local one-off Supabase/admin helper artifacts.
+check-user.cjs
+confirm-user.cjs
+create-user.cjs
+make-admin.cjs
+test-signup.cjs
+sign_up.html
+
 .vercel
 .env*

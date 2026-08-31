@@ -6,8 +6,12 @@ import { isTrustedMutationOrigin } from "@/lib/safety/origin";
 import { normalizeEquipmentPhoto } from "@/lib/safety/images";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/telemetry";
+import { postgresUuidSchema } from "@/lib/validation/uuid";
 
-const fieldsSchema = z.object({ catalogId: z.uuid(), caption: z.string().trim().max(300) });
+const fieldsSchema = z.object({
+  catalogId: postgresUuidSchema,
+  caption: z.string().trim().max(300)
+});
 
 export async function POST(request: NextRequest) {
   const referenceId = randomUUID();
@@ -21,6 +25,41 @@ export async function POST(request: NextRequest) {
       { message: "Protected operations are paused", referenceId },
       { status: 503 }
     );
+  if (environment.demoMode) {
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return NextResponse.json({ message: "Invalid upload", referenceId }, { status: 400 });
+    }
+    const parsed = fieldsSchema.safeParse({
+      catalogId: form.get("catalogId"),
+      caption: form.get("caption") ?? ""
+    });
+    const file = form.get("photo");
+    if (!parsed.success || !(file instanceof File))
+      return NextResponse.json(
+        { message: "Choose an equipment item and image", referenceId },
+        { status: 422 }
+      );
+    try {
+      await normalizeEquipmentPhoto(Buffer.from(await file.arrayBuffer()));
+    } catch {
+      return NextResponse.json(
+        { message: "Use a single-frame JPEG, PNG, WebP, or AVIF image up to 8 MB", referenceId },
+        { status: 422 }
+      );
+    }
+    return NextResponse.json(
+      {
+        status: "committed",
+        referenceId,
+        demo: true,
+        result: { photo_id: referenceId, catalog_id: parsed.data.catalogId }
+      },
+      { status: 201 }
+    );
+  }
   const client = await createSupabaseServerClient();
   const service = createSupabaseServiceClient();
   if (!client || !service)

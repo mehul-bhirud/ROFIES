@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
   };
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const demoMode = process.env.ROFIES_DEMO_MODE !== "false";
+  const demoMode = process.env.ROFIES_DEMO_MODE === "true";
   if (!url || !key || demoMode)
     return secure(NextResponse.next({ request: { headers: requestHeaders } }));
   let response = NextResponse.next({ request: { headers: requestHeaders } });
@@ -46,7 +46,9 @@ export async function proxy(request: NextRequest) {
   if (data.user && isPageRequest && !isPublicApplicationPath(pathname)) {
     const { data: statusData, error } = await client.schema("api").rpc("member_application_status");
     const status = error ? null : parseMemberApplicationStatus(statusData);
-    const allowedDomains = (process.env.ROFIES_ALLOWED_EMAIL_DOMAINS ?? "iiitp.ac.in,ece.iiitp.ac.in,cse.iiitp.ac.in")
+    const allowedDomains = (
+      process.env.ROFIES_ALLOWED_EMAIL_DOMAINS ?? "iiitp.ac.in,ece.iiitp.ac.in,cse.iiitp.ac.in"
+    )
       .split(",")
       .map((domain) => domain.trim())
       .filter(Boolean);

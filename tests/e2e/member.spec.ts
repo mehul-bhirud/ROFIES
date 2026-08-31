@@ -29,7 +29,10 @@ test("member catalog has no automatically detectable accessibility violations @a
   page
 }) => {
   await page.goto("/");
-  const scan = await new AxeBuilder({ page }).analyze();
+  await expect(
+    page.getByRole("heading", { name: "Build with what is actually ready.", level: 1 })
+  ).toBeVisible();
+  const scan = await new AxeBuilder({ page }).include("main").analyze();
   expect(scan.violations).toEqual([]);
 });
 

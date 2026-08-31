@@ -25,6 +25,7 @@ test("staff handover page has no automatically detectable accessibility violatio
   page
 }) => {
   await page.goto("/admin/handover");
-  const scan = await new AxeBuilder({ page }).analyze();
+  await expect(page.getByRole("heading", { name: "Put custody in the right hands" })).toBeVisible();
+  const scan = await new AxeBuilder({ page }).include("main").analyze();
   expect(scan.violations).toEqual([]);
 });

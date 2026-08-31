@@ -62,6 +62,15 @@ describe("proxy applicant isolation", () => {
     expect(mocks.rpc).toHaveBeenCalledWith("member_application_status");
   });
 
+  it("does not silently enter demo mode when the demo flag is missing", async () => {
+    delete process.env.ROFIES_DEMO_MODE;
+    const response = await proxy(new NextRequest("http://localhost:3000/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3000/pending");
+    expect(mocks.rpc).toHaveBeenCalledWith("member_application_status");
+  });
+
   it("allows the applicant only on the page matching their current state", async () => {
     const pending = await proxy(new NextRequest("http://localhost:3000/pending"));
     const catalog = await proxy(new NextRequest("http://localhost:3000/contacts"));

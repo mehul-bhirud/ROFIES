@@ -76,8 +76,8 @@ export async function signUpAction(
   );
   if (!parsed.success) return invalidResult(parsed.error);
 
+  if (env.demoMode) return { ok: true, message: genericSignupMessage };
   const client = await createSupabaseServerClient();
-  if (!client && env.demoMode) return { ok: true, message: genericSignupMessage };
   if (!client) return { ok: false, message: unavailableMessage };
   try {
     await client.auth.signUp({
@@ -106,9 +106,8 @@ export async function signInAction(
   );
   if (!parsed.success) return invalidResult(parsed.error);
 
+  if (env.demoMode) return { ok: true, message: "Signed in. Redirecting to your account…" };
   const client = await createSupabaseServerClient();
-  if (!client && env.demoMode)
-    return { ok: true, message: "Signed in. Redirecting to your account…" };
   if (!client) return { ok: false, message: unavailableMessage };
   let user;
   try {
@@ -158,8 +157,8 @@ export async function requestPasswordResetAction(
   );
   if (!parsed.success) return invalidResult(parsed.error);
 
+  if (env.demoMode) return { ok: true, message: genericRecoveryMessage };
   const client = await createSupabaseServerClient();
-  if (!client && env.demoMode) return { ok: true, message: genericRecoveryMessage };
   if (!client) return { ok: false, message: unavailableMessage };
   try {
     await client.auth.resetPasswordForEmail(parsed.data.email, {
@@ -185,9 +184,9 @@ export async function updatePasswordAction(
   );
   if (!parsed.success) return invalidResult(parsed.error);
 
-  const client = await createSupabaseServerClient();
   const env = getServerEnvironment();
-  if (!client && env.demoMode) return { ok: true, message: "You are signed out." };
+  if (env.demoMode) return { ok: true, message: "You are signed out." };
+  const client = await createSupabaseServerClient();
   if (!client) return { ok: false, message: unavailableMessage };
   try {
     const { error } = await client.auth.updateUser({ password: parsed.data.password });
@@ -209,6 +208,8 @@ export async function signOutAction(
 ): Promise<AuthActionState> {
   void first;
   void second;
+  const env = getServerEnvironment();
+  if (env.demoMode) return { ok: true, message: "You are signed out." };
   const client = await createSupabaseServerClient();
   if (!client) return { ok: false, message: unavailableMessage };
   try {

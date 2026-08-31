@@ -1,16 +1,10 @@
-import { readdir, readFile } from "node:fs/promises";
-import { extname, join, relative } from "node:path";
+import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
+import { extname } from "node:path";
+import { promisify } from "node:util";
 
 const root = process.cwd();
-const excluded = new Set([
-  ".git",
-  ".next",
-  "node_modules",
-  "playwright-report",
-  "test-results",
-  "coverage",
-  "supabase/.temp"
-]);
+const execFileAsync = promisify(execFile);
 const readableExtensions = new Set([
   ".ts",
   ".tsx",
@@ -38,25 +32,22 @@ const credentialPatterns = [
   }
 ] as const;
 
-async function walk(directory: string): Promise<string[]> {
-  const files: string[] = [];
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const fullPath = join(directory, entry.name);
-    const projectPath = relative(root, fullPath).replaceAll("\\", "/");
-    if (entry.isDirectory()) {
-      if (![...excluded].some((item) => projectPath === item || projectPath.startsWith(`${item}/`)))
-        files.push(...(await walk(fullPath)));
-    } else if (readableExtensions.has(extname(entry.name)) || entry.name.startsWith(".env")) {
-      files.push(fullPath);
-    }
-  }
-  return files;
+async function gitSourceFiles() {
+  const { stdout } = await execFileAsync(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    { cwd: root, maxBuffer: 16 * 1024 * 1024 }
+  );
+  return stdout
+    .split("\0")
+    .filter(Boolean)
+    .filter((file) => readableExtensions.has(extname(file)) || file.startsWith(".env"));
 }
 
 const findings: string[] = [];
-const files = await walk(root);
+const files = await gitSourceFiles();
 for (const file of files) {
-  const projectPath = relative(root, file).replaceAll("\\", "/");
+  const projectPath = file.replaceAll("\\", "/");
   if (projectPath.startsWith(".env") && projectPath !== ".env.example")
     findings.push(`${projectPath}: environment file must not be committed`);
   const contents = await readFile(file, "utf8");

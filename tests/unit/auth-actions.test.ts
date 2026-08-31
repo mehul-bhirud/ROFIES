@@ -8,15 +8,17 @@ const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   createSupabaseServerClient: vi.fn(),
   createSupabaseServiceClient: vi.fn(),
-  provisionConfirmedApplicant: vi.fn()
+  provisionConfirmedApplicant: vi.fn(),
+  environment: {
+    ROFIES_APP_ORIGIN: "https://equipment.iiitp.ac.in",
+    allowedEmailDomains: ["iiitp.ac.in"],
+    demoMode: false
+  }
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/server", () => ({
-  getServerEnvironment: () => ({
-    ROFIES_APP_ORIGIN: "https://equipment.iiitp.ac.in",
-    allowedEmailDomains: ["iiitp.ac.in"]
-  })
+  getServerEnvironment: () => mocks.environment
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: mocks.createSupabaseServerClient,
@@ -43,6 +45,7 @@ function formData(values: Record<string, string>) {
 describe("password authentication server actions", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.environment.demoMode = false;
     mocks.createSupabaseServerClient.mockResolvedValue({
       auth: {
         signUp: mocks.signUp,
@@ -134,6 +137,18 @@ describe("password authentication server actions", () => {
       expect.anything(),
       expect.objectContaining({ id: "user-1", email: "student@iiitp.ac.in" })
     );
+  });
+
+  it("keeps demo sign-in deterministic even when Supabase credentials are configured", async () => {
+    mocks.environment.demoMode = true;
+
+    const result = await signInAction(
+      formData({ email: "student@iiitp.ac.in", password: "Correct-Horse-42" })
+    );
+
+    expect(result).toEqual({ ok: true, message: "Signed in. Redirecting to your account…" });
+    expect(mocks.createSupabaseServerClient).not.toHaveBeenCalled();
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
   });
 
   it("fails closed locally and repairs a partial applicant on the next sign-in", async () => {
