@@ -30,6 +30,21 @@ describe("institutional password authentication schemas", () => {
     ).toBe(false);
   });
 
+  it("allows the configured developer email without allowing the whole Gmail domain", () => {
+    expect(
+      createSignInSchema(allowedDomains).safeParse({
+        email: " MEHUL.C.BHIRUD@GMAIL.COM ",
+        password: "Correct-Horse-42"
+      }).success
+    ).toBe(true);
+    expect(
+      createSignInSchema(allowedDomains).safeParse({
+        email: "someone.else@gmail.com",
+        password: "Correct-Horse-42"
+      }).success
+    ).toBe(false);
+  });
+
   it.each(["short", "all-lowercase-42", "ALL-UPPERCASE-42", "No-Numbers-Here"])(
     "rejects a password missing a required strength characteristic: %s",
     (password) => {
@@ -82,6 +97,12 @@ describe("institutional identity", () => {
     expect(validateInstitutionalEmail("student@iiitp.ac.in.attacker.test", allowedDomains)).toBe(
       false
     );
+  });
+
+  it("validates only the configured developer email exception", () => {
+    expect(validateInstitutionalEmail("mehul.c.bhirud@gmail.com", allowedDomains)).toBe(true);
+    expect(validateInstitutionalEmail("mehul.c.bhirud+test@gmail.com", allowedDomains)).toBe(false);
+    expect(validateInstitutionalEmail("attacker@gmail.com", allowedDomains)).toBe(false);
   });
 
   it("builds a new applicant profile without granting active access", () => {

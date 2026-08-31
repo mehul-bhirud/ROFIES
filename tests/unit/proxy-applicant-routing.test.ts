@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   state: "pending_review" as
     "incomplete" | "pending_review" | "changes_requested" | "approved" | "rejected",
   membershipStatus: "inactive",
+  email: "student@iiitp.ac.in",
   emailConfirmedAt: "2026-08-08T10:00:00.000Z" as string | null,
   rpc: vi.fn()
 }));
@@ -16,7 +17,7 @@ vi.mock("@supabase/ssr", () => ({
         data: {
           user: {
             id: "33333333-3333-4333-8333-333333333333",
-            email: "student@iiitp.ac.in",
+            email: mocks.email,
             email_confirmed_at: mocks.emailConfirmedAt
           }
         }
@@ -38,6 +39,7 @@ describe("proxy applicant isolation", () => {
     delete process.env.VERCEL_ENV;
     mocks.state = "pending_review";
     mocks.membershipStatus = "inactive";
+    mocks.email = "student@iiitp.ac.in";
     mocks.emailConfirmedAt = "2026-08-08T10:00:00.000Z";
     mocks.rpc.mockImplementation(async () => ({
       data: {
@@ -102,6 +104,16 @@ describe("proxy applicant isolation", () => {
     mocks.state = "approved";
     mocks.membershipStatus = "active";
     const response = await proxy(new NextRequest("http://localhost:3000/requests"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("allows the exact developer email exception through the protected route gate", async () => {
+    mocks.email = "mehul.c.bhirud@gmail.com";
+    mocks.state = "approved";
+    mocks.membershipStatus = "active";
+    const response = await proxy(new NextRequest("http://localhost:3000/admin"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();

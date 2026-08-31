@@ -1,5 +1,5 @@
 begin;
-select plan(16);
+select plan(20);
 
 select has_table('public', 'password_reset_requests', 'manual password reset request table exists');
 select has_function(
@@ -38,6 +38,25 @@ select is(
   (select api.request_manual_password_reset('student@gmail.com')),
   null::uuid,
   'external emails are ignored'
+);
+select lives_ok(
+  $$select api.request_manual_password_reset('mehul.c.bhirud@gmail.com')$$,
+  'configured developer email exception can queue a manual reset request'
+);
+select is(
+  (select count(*) from public.password_reset_requests where institutional_email='mehul.c.bhirud@gmail.com'),
+  1::bigint,
+  'developer email exception is recorded once'
+);
+select is(
+  (select api.request_manual_password_reset('mehul.c.bhirud+test@gmail.com')),
+  null::uuid,
+  'developer email exception does not allow aliases'
+);
+select is(
+  (select api.request_manual_password_reset('someone.else@gmail.com')),
+  null::uuid,
+  'developer email exception does not allow other Gmail users'
 );
 select is_empty(
   $$select column_name from information_schema.columns where table_schema='public' and table_name='password_reset_requests' and column_name like '%password%'$$,

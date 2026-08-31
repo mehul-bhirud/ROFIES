@@ -57,6 +57,7 @@
 - Rate-limit signup, login, confirmation resend, recovery, and password changes by safe combinations of IP, account, and server-side context.
 - Send only authentication confirmation and security messages through institution SMTP when enabled; never place application data in those messages.
 - Manual password recovery requests are admin-visible only, use generic public acknowledgements, and allow administrators to set a new temporary password only after manual identity verification. Existing passwords and temporary passwords must never be stored in application tables, audit rows, logs, or notifications.
+- The only non-institutional login exception is the exact developer owner address `mehul.c.bhirud@gmail.com`; do not broaden this to a consumer-email domain.
 - Use secure, HTTP-only, SameSite cookies as supported by the chosen auth flow.
 - Rotate/refresh sessions through supported provider mechanisms.
 - Recheck active account, membership, and staff permissions on protected commands.

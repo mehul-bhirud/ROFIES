@@ -143,6 +143,29 @@ describe("password authentication server actions", () => {
     );
   });
 
+  it("permits the configured developer email exception during sign-in", async () => {
+    mocks.signInWithPassword.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: "developer-1",
+          email: "mehul.c.bhirud@gmail.com",
+          email_confirmed_at: "2026-08-08T10:00:00.000Z"
+        }
+      },
+      error: null
+    });
+
+    const result = await signInAction(
+      formData({ email: "mehul.c.bhirud@gmail.com", password: "Correct-Horse-42" })
+    );
+
+    expect(result.ok).toBe(true);
+    expect(mocks.provisionConfirmedApplicant).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "developer-1", email: "mehul.c.bhirud@gmail.com" })
+    );
+  });
+
   it("keeps demo sign-in deterministic even when Supabase credentials are configured", async () => {
     mocks.environment.demoMode = true;
 

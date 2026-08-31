@@ -113,6 +113,8 @@ Do not run `supabase/seed.sql` against production. Seed data is fictional local/
 
 Application tables do not store plaintext passwords. Supabase Auth owns password storage in `auth.users.encrypted_password`, which is provider-managed hashed password data. Application access is controlled separately through membership state and `public.role_assignments`. Manual reset requests store only the requesting institutional email and processing metadata; administrators can generate a new temporary password, but the old password is never visible.
 
+The application has one hardcoded developer email exception, `mehul.c.bhirud@gmail.com`, for emergency owner access. This exception does not allow the rest of `gmail.com`; all other non-institutional addresses remain rejected by application validation.
+
 ## Post-Deploy Smoke
 
 After deployment, test these with real production configuration:
