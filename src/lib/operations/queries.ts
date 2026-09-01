@@ -294,7 +294,7 @@ export const getMemberApplicationQueue = cache(async (): Promise<MemberApplicati
   const { data, error } = await client
     .from("member_applications")
     .select(
-      "id,state,submitted_at,decision_reason,profiles(display_name,student_identifier,department,study_year,institutional_email)"
+      "id,state,submitted_at,decision_reason,profiles!member_applications_profile_id_fkey(display_name,student_identifier,department,study_year,institutional_email)"
     )
     .eq("state", "pending_review")
     .order("submitted_at", { ascending: true })
