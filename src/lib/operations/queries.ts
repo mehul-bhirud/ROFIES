@@ -59,6 +59,19 @@ export interface AccountContext {
   unreadNotifications: number;
   environmentLabel: string;
 }
+export interface OwnProfileRecord {
+  displayName: string;
+  institutionalEmail: string;
+  studentIdentifier: string | null;
+  department: string | null;
+  studyYear: number | null;
+  phone: string | null;
+  active: boolean;
+  membershipStatus: string | null;
+  lastAuthenticatedAt: string | null;
+  joinedAt: string | null;
+  capabilities: string[];
+}
 export interface PasswordResetRequestRecord {
   id: string;
   institutionalEmail: string;
@@ -167,6 +180,73 @@ export const getAccountContext = cache(
     };
   }
 );
+
+export const getOwnProfile = cache(async (): Promise<OwnProfileRecord | null> => {
+  const environment = getServerEnvironment();
+  if (environment.demoMode || !environment.supabaseConfigured)
+    return {
+      displayName: "Anaya Kulkarni",
+      institutionalEmail: "anaya.kulkarni@iiitp.ac.in",
+      studentIdentifier: "FIC-2401",
+      department: "ECE",
+      studyYear: 3,
+      phone: "+91 90000 00001",
+      active: true,
+      membershipStatus: "active",
+      lastAuthenticatedAt: dateTime.format(new Date()),
+      joinedAt: "8 Aug, 10:00",
+      capabilities: []
+    };
+
+  const client = await createSupabaseServerClient();
+  if (!client) return null;
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return null;
+
+  const [{ data: profile, error: profileError }, { data: membership }, { data: roles }] =
+    await Promise.all([
+      client
+        .from("profiles")
+        .select(
+          "display_name,institutional_email,student_identifier,department,study_year,phone,active,last_authenticated_at,created_at"
+        )
+        .eq("id", userId)
+        .maybeSingle(),
+      client
+        .from("memberships")
+        .select("status,approved_at")
+        .eq("profile_id", userId)
+        .maybeSingle(),
+      client
+        .from("role_assignments")
+        .select("capability")
+        .eq("profile_id", userId)
+        .is("revoked_at", null)
+        .order("capability")
+    ]);
+  if (profileError || !profile) return null;
+
+  return {
+    displayName: String(profile.display_name),
+    institutionalEmail: String(profile.institutional_email),
+    studentIdentifier:
+      typeof profile.student_identifier === "string" ? profile.student_identifier : null,
+    department: typeof profile.department === "string" ? profile.department : null,
+    studyYear: typeof profile.study_year === "number" ? profile.study_year : null,
+    phone: typeof profile.phone === "string" ? profile.phone : null,
+    active: Boolean(profile.active),
+    membershipStatus:
+      membership && typeof membership.status === "string" ? membership.status : null,
+    lastAuthenticatedAt: profile.last_authenticated_at
+      ? dateTime.format(new Date(String(profile.last_authenticated_at)))
+      : null,
+    joinedAt: membership?.approved_at
+      ? dateTime.format(new Date(String(membership.approved_at)))
+      : dateTime.format(new Date(String(profile.created_at))),
+    capabilities: (roles ?? []).map((role) => String(role.capability))
+  };
+});
 
 export const getApprovalWorkbench = cache(async (): Promise<ApprovalRecord[]> => {
   const client = await apiClient();

@@ -8,6 +8,7 @@ const routes = [
   "/",
   "/catalog/00000000-0000-0000-0000-000000000101",
   "/requests",
+  "/profile",
   "/notifications",
   "/contacts",
   "/offline",

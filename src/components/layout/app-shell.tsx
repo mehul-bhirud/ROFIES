@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell, ChevronDown, FlaskConical } from "lucide-react";
+import { Bell, ChevronDown, FlaskConical, LogOut, UserRound } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { Navigation } from "@/components/layout/navigation";
 import { signOutAction } from "@/lib/auth/actions";
@@ -75,16 +75,36 @@ export async function AppShell({
               <Bell size={20} aria-hidden="true" />
               {account.unreadNotifications ? <span className="notification-dot" /> : null}
             </Link>
-            <form action={signOutFromShell}>
-              <button className="profile-button" type="submit" aria-label="Sign out">
+            <details className="profile-menu">
+              <summary
+                className="profile-button"
+                role="button"
+                aria-label={`Account menu for ${account.displayName}`}
+              >
                 <span className="avatar">{account.initials}</span>
                 <span className="profile-copy">
                   <strong>{account.displayName}</strong>
                   <small>{account.roleLabel}</small>
                 </span>
                 <ChevronDown size={16} aria-hidden="true" />
-              </button>
-            </form>
+              </summary>
+              <div className="profile-menu-panel">
+                <Link
+                  className="profile-menu-item"
+                  href="/profile"
+                  aria-label={`View profile for ${account.displayName}`}
+                >
+                  <UserRound size={17} aria-hidden="true" />
+                  <span>View profile</span>
+                </Link>
+                <form action={signOutFromShell}>
+                  <button className="profile-menu-item profile-menu-danger" type="submit">
+                    <LogOut size={17} aria-hidden="true" />
+                    <span>Sign out</span>
+                  </button>
+                </form>
+              </div>
+            </details>
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
