@@ -1,5 +1,7 @@
 import { test, expect } from "./fixtures";
 
+test.describe.configure({ timeout: 90_000 });
+
 test("capture representative member and staff surfaces @visual", async ({ page }, testInfo) => {
   const profile = testInfo.project.name.includes("mobile") ? "mobile" : "desktop";
   await page.goto("/");

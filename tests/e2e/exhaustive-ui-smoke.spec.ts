@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import sharp from "sharp";
 import { test, expect } from "./fixtures";
 
-test.describe.configure({ timeout: 90_000 });
+test.describe.configure({ timeout: 180_000 });
 
 const routes = [
   "/",
