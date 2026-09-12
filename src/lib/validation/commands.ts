@@ -125,3 +125,104 @@ export const memberDecisionCommandSchema = z.object({
   reason: boundedText(3, 500),
   idempotencyKey: boundedText(12, 120)
 });
+
+const catalogCondition = z.enum(["perfect", "minor_damage", "repair_required", "not_working"]);
+
+const catalogItemMetadataFields = {
+  categoryId: databaseId,
+  name: boundedText(2, 160),
+  description: boundedText(0, 4000).optional(),
+  publicRemarks: boundedText(0, 2000).optional(),
+  internalRemarks: boundedText(0, 4000).optional(),
+  defaultLoanDays: z.number().int().min(1).max(90).optional(),
+  maximumLoanDays: z.number().int().min(1).max(180).optional(),
+  memberQuantityLimit: z.number().int().min(1).optional(),
+  pickupWindowHours: z.number().int().min(1).max(168).optional(),
+  waitlistEnabled: z.boolean().default(true),
+  counterIssueEnabled: z.boolean().default(false),
+  lowStockThreshold: z.number().int().min(0).optional(),
+  acquisitionDate: z.iso.date().optional(),
+  supplier: boundedText(1, 200).optional(),
+  warrantyUntil: z.iso.date().optional(),
+  replacementCost: z.number().min(0).optional(),
+  tags: z.array(boundedText(1, 60)).max(20).default([])
+};
+
+function loanDaysOrdered(value: any) {
+  return (
+    value.maximumLoanDays === undefined ||
+    value.defaultLoanDays === undefined ||
+    value.maximumLoanDays >= value.defaultLoanDays
+  );
+}
+
+export const createCatalogItemCommandSchema = z
+  .object({
+    ...catalogItemMetadataFields,
+    trackingMode: z.enum(["pooled_reusable", "individual_asset", "consumable"]),
+    openingUnits: z
+      .array(
+        z.object({
+          storageLocationId: databaseId.optional(),
+          condition: catalogCondition.default("perfect"),
+          quantity: z.number().int().min(1).max(1000).optional(),
+          localIdentifier: boundedText(1, 120).optional()
+        })
+      )
+      .max(50)
+      .default([]),
+    idempotencyKey: boundedText(12, 120)
+  })
+  .refine(loanDaysOrdered, {
+    message: "Maximum loan days must be at least default loan days",
+    path: ["maximumLoanDays"]
+  });
+
+export const updateCatalogItemCommandSchema = z
+  .object({
+    catalogItemId: databaseId,
+    ...catalogItemMetadataFields,
+    reason: boundedText(3, 1000),
+    idempotencyKey: boundedText(12, 120)
+  })
+  .refine(loanDaysOrdered, {
+    message: "Maximum loan days must be at least default loan days",
+    path: ["maximumLoanDays"]
+  });
+
+export const archiveCatalogItemCommandSchema = z.object({
+  catalogItemId: databaseId,
+  reason: boundedText(3, 1000),
+  idempotencyKey: boundedText(12, 120)
+});
+
+export const restoreCatalogItemCommandSchema = archiveCatalogItemCommandSchema;
+
+export const deleteCatalogItemCommandSchema = z.object({
+  catalogItemId: databaseId,
+  reason: boundedText(3, 1000),
+  idempotencyKey: boundedText(12, 120)
+});
+
+export const adjustStockCommandSchema = z.object({
+  catalogItemId: databaseId,
+  storageLocationId: databaseId.optional(),
+  condition: catalogCondition,
+  quantityDelta: z
+    .number()
+    .int()
+    .min(-1000)
+    .max(1000)
+    .refine((value) => value !== 0, { message: "Quantity delta must not be zero" }),
+  reason: boundedText(3, 1000),
+  idempotencyKey: boundedText(12, 120)
+});
+
+export const addIndividualAssetCommandSchema = z.object({
+  catalogItemId: databaseId,
+  localIdentifier: boundedText(1, 120).optional(),
+  storageLocationId: databaseId.optional(),
+  condition: catalogCondition.default("perfect"),
+  reason: boundedText(3, 1000),
+  idempotencyKey: boundedText(12, 120)
+});
