@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Bell, ChevronDown, FlaskConical, LogOut, UserRound } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { Navigation } from "@/components/layout/navigation";
+import { SidebarToggle } from "@/components/layout/sidebar-toggle";
 import { signOutAction } from "@/lib/auth/actions";
 import { getAccountContext } from "@/lib/operations/queries";
 
@@ -65,7 +66,7 @@ export async function AppShell({
           >
             ROF<span>/</span>IES
           </Link>
-          <div className="environment-chip">{account.environmentLabel}</div>
+          <SidebarToggle />
           <div className="topbar-actions">
             <Link
               className="icon-button"

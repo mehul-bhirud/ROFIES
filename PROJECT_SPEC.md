@@ -103,7 +103,7 @@ The registration lifecycle is:
 
 Each catalog item supports:
 
-- Name, description, category, aliases, tags, and free-form searchable key/value specifications.
+- Name, description, and category are required; aliases, tags, and free-form searchable key/value specifications are optional. Inventory managers can create a new category inline while adding a catalog item; category names are unique.
 - One or more photos. Photos are required for important reusable equipment and optional for basic consumables.
 - Public remarks and internal admin remarks.
 - Tracking mode and return policy.

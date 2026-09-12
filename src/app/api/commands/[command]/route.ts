@@ -7,6 +7,7 @@ import {
   cancelRequestCommandSchema,
   counterIssueCommandSchema,
   createCatalogItemCommandSchema,
+  createCategoryCommandSchema,
   decisionCommandSchema,
   deleteCatalogItemCommandSchema,
   extensionDecisionCommandSchema,
@@ -38,6 +39,7 @@ const schemas = {
   loss: lossResolutionCommandSchema,
   memberDecision: memberDecisionCommandSchema,
   createCatalogItem: createCatalogItemCommandSchema,
+  createCategory: createCategoryCommandSchema,
   updateCatalogItem: updateCatalogItemCommandSchema,
   archiveCatalogItem: archiveCatalogItemCommandSchema,
   restoreCatalogItem: restoreCatalogItemCommandSchema,
@@ -49,7 +51,8 @@ type Command = keyof typeof schemas;
 
 const knownSafeErrorMessages = new Set<string>([
   "catalog item has history and cannot be permanently deleted; archive it instead",
-  "an individual asset with this identifier already exists"
+  "an individual asset with this identifier already exists",
+  "a category with this name already exists"
 ]);
 
 function safeError(referenceId: string, status: number, message: string) {
@@ -236,6 +239,12 @@ export async function POST(
         quantity: unit.quantity ?? null,
         local_identifier: unit.localIdentifier ?? null
       })),
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "createCategory") {
+    const value = createCategoryCommandSchema.parse(body);
+    result = await client.schema("api").rpc("create_category", {
+      name: value.name,
       idempotency_key: value.idempotencyKey
     });
   } else if (command === "updateCatalogItem") {

@@ -4,6 +4,7 @@ import { isTrustedMutationOrigin } from "@/lib/safety/origin";
 import {
   adjustStockCommandSchema,
   createCatalogItemCommandSchema,
+  createCategoryCommandSchema,
   deleteCatalogItemCommandSchema,
   handoverCommandSchema,
   requestCommandSchema,
@@ -78,6 +79,7 @@ describe("server boundaries", () => {
       createCatalogItemCommandSchema.safeParse({
         categoryId: "00000000-0000-0000-0000-000000000201",
         name: "Bench Multimeter",
+        description: "A bench multimeter for prototyping",
         trackingMode: "pooled_reusable",
         openingUnits: [
           {
@@ -94,6 +96,15 @@ describe("server boundaries", () => {
         categoryId: "00000000-0000-0000-0000-000000000201",
         name: "Bench Multimeter",
         trackingMode: "pooled_reusable",
+        idempotencyKey: "create-catalog-item-missing-description-0001"
+      }).success
+    ).toBe(false);
+    expect(
+      createCatalogItemCommandSchema.safeParse({
+        categoryId: "00000000-0000-0000-0000-000000000201",
+        name: "Bench Multimeter",
+        description: "A bench multimeter for prototyping",
+        trackingMode: "pooled_reusable",
         defaultLoanDays: 10,
         maximumLoanDays: 5,
         idempotencyKey: "create-catalog-item-0002"
@@ -104,6 +115,7 @@ describe("server boundaries", () => {
         catalogItemId: "00000000-0000-0000-0000-000000000101",
         categoryId: "00000000-0000-0000-0000-000000000201",
         name: "Arduino Mega 2560",
+        description: "ATmega2560 development board for high I/O prototypes.",
         reason: "Corrected the public remarks",
         idempotencyKey: "update-catalog-item-0001"
       }).success
@@ -133,5 +145,21 @@ describe("server boundaries", () => {
         idempotencyKey: "adjust-stock-0002"
       }).success
     ).toBe(true);
+  });
+
+  it("validates category create command shape", () => {
+    expect(
+      createCategoryCommandSchema.safeParse({
+        name: "Sensors",
+        idempotencyKey: "create-category-0001"
+      }).success
+    ).toBe(true);
+    expect(
+      createCategoryCommandSchema.safeParse({
+        name: "",
+        idempotencyKey: "create-category-0002"
+      }).success
+    ).toBe(false);
+    expect(createCategoryCommandSchema.safeParse({ name: "Sensors" }).success).toBe(false);
   });
 });

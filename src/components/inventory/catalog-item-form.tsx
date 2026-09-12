@@ -6,6 +6,7 @@ import type { CatalogItemDetail, Category, StorageLocation } from "@/lib/catalog
 
 const conditions = ["perfect", "minor_damage", "repair_required", "not_working"] as const;
 const trackingModes = ["pooled_reusable", "individual_asset", "consumable"] as const;
+const createCategoryOptionValue = "__create_new_category__";
 
 function parseTags(value: string): string[] {
   return value
@@ -32,6 +33,9 @@ export function CatalogItemForm({
   const [trackingMode, setTrackingMode] = useState<CatalogItemDetail["trackingMode"]>(
     item?.trackingMode ?? "pooled_reusable"
   );
+  const [categoryOptions, setCategoryOptions] = useState<readonly Category[]>(categories);
+  const [categorySelection, setCategorySelection] = useState(item?.categoryId ?? "");
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   function submit(formData: FormData) {
     startTransition(async () => {
@@ -45,8 +49,52 @@ export function CatalogItemForm({
         const raw = formData.get(name);
         return raw === null || raw === "" ? undefined : String(raw);
       };
+      let resolvedCategoryId = categorySelection;
+      if (categorySelection === createCategoryOptionValue) {
+        const categoryName = String(formData.get("newCategoryName") ?? "").trim();
+        if (!categoryName) {
+          setResult({ state: "error", message: "Enter a name for the new category." });
+          return;
+        }
+        const categoryIdempotencyKey = crypto.randomUUID();
+        try {
+          const categoryResponse = await fetch("/api/commands/createCategory", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Idempotency-Key": categoryIdempotencyKey
+            },
+            body: JSON.stringify({ name: categoryName, idempotencyKey: categoryIdempotencyKey })
+          });
+          const categoryBody = (await categoryResponse.json()) as {
+            message?: string;
+            referenceId?: string;
+            demo?: boolean;
+            result?: { category_id?: string };
+          };
+          if (!categoryResponse.ok) {
+            setResult({
+              state: "error",
+              message:
+                categoryBody.message ??
+                `Could not create category. Reference ${categoryBody.referenceId ?? "unavailable"}.`
+            });
+            return;
+          }
+          resolvedCategoryId = categoryBody.result?.category_id ?? crypto.randomUUID();
+          setCategoryOptions((current) => [...current, { id: resolvedCategoryId, name: categoryName }]);
+          setCategorySelection(resolvedCategoryId);
+          setNewCategoryName("");
+        } catch {
+          setResult({
+            state: "error",
+            message: "Network unavailable. The category was not created; retry."
+          });
+          return;
+        }
+      }
       const metadata = {
-        categoryId: String(formData.get("categoryId")),
+        categoryId: resolvedCategoryId,
         name: String(formData.get("name")),
         description: textOrUndefined("description"),
         publicRemarks: textOrUndefined("publicRemarks"),
@@ -142,17 +190,38 @@ export function CatalogItemForm({
       </header>
       <div className="form-field">
         <label htmlFor="categoryId">Category</label>
-        <select id="categoryId" name="categoryId" defaultValue={item?.categoryId ?? ""} required>
+        <select
+          id="categoryId"
+          name="categoryId"
+          value={categorySelection}
+          onChange={(event) => setCategorySelection(event.target.value)}
+          required
+        >
           <option value="" disabled>
             Select a category
           </option>
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
             </option>
           ))}
+          <option value={createCategoryOptionValue}>+ Create a new category&hellip;</option>
         </select>
       </div>
+      {categorySelection === createCategoryOptionValue ? (
+        <div className="form-field">
+          <label htmlFor="newCategoryName">New category name</label>
+          <input
+            id="newCategoryName"
+            name="newCategoryName"
+            minLength={1}
+            maxLength={80}
+            value={newCategoryName}
+            onChange={(event) => setNewCategoryName(event.target.value)}
+            required
+          />
+        </div>
+      ) : null}
       <div className="form-field">
         <label htmlFor="name">Name</label>
         <input
@@ -169,15 +238,17 @@ export function CatalogItemForm({
         <textarea
           id="description"
           name="description"
+          minLength={1}
           maxLength={4000}
           defaultValue={item?.description}
+          required
         />
       </div>
       {mode === "create" ? (
         <fieldset className="decision-line">
           <legend>Tracking mode (cannot be changed later)</legend>
           {trackingModes.map((option) => (
-            <label key={option} className="form-field">
+            <label key={option} className="form-field-choice">
               <input
                 type="radio"
                 name="trackingModeChoice"
@@ -266,7 +337,7 @@ export function CatalogItemForm({
           defaultValue={item?.lowStockThreshold ?? undefined}
         />
       </div>
-      <div className="form-field">
+      <div className="form-field-checkbox">
         <label>
           <input
             type="checkbox"
@@ -276,7 +347,7 @@ export function CatalogItemForm({
           Allow waitlisting
         </label>
       </div>
-      <div className="form-field">
+      <div className="form-field-checkbox">
         <label>
           <input
             type="checkbox"

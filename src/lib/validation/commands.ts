@@ -131,7 +131,7 @@ const catalogCondition = z.enum(["perfect", "minor_damage", "repair_required", "
 const catalogItemMetadataFields = {
   categoryId: databaseId,
   name: boundedText(2, 160),
-  description: boundedText(0, 4000).optional(),
+  description: boundedText(1, 4000),
   publicRemarks: boundedText(0, 2000).optional(),
   internalRemarks: boundedText(0, 4000).optional(),
   defaultLoanDays: z.number().int().min(1).max(90).optional(),
@@ -231,5 +231,10 @@ export const addIndividualAssetCommandSchema = z.object({
   storageLocationId: databaseId.optional(),
   condition: catalogCondition.default("perfect"),
   reason: boundedText(3, 1000),
+  idempotencyKey: boundedText(12, 120)
+});
+
+export const createCategoryCommandSchema = z.object({
+  name: boundedText(1, 80),
   idempotencyKey: boundedText(12, 120)
 });

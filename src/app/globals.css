@@ -16,6 +16,8 @@
   --danger-soft: #fee8eb;
   --border: #c8d7d9;
   --border-strong: #93aaae;
+  --hero-bg: #0b2b30;
+  --hero-fg: #eaf6f7;
   --shadow-dialog: 0 24px 64px rgba(9, 34, 39, 0.18);
   --font-display: "Space Grotesk Variable", "Segoe UI", sans-serif;
   --font-body: "Source Sans 3 Variable", "Segoe UI", sans-serif;
@@ -136,6 +138,12 @@ svg {
   display: flex;
   flex-direction: column;
   z-index: 40;
+}
+html.sidebar-collapsed .sidebar {
+  display: none;
+}
+html.sidebar-collapsed .app-column {
+  margin-left: 0;
 }
 .brand {
   min-height: 48px;
@@ -276,14 +284,22 @@ svg {
 .mobile-brand span {
   color: var(--signal);
 }
-.environment-chip {
+.sidebar-toggle {
   margin-right: auto;
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
   border: 1px solid var(--border);
-  background: var(--surface);
-  padding: 5px 9px;
-  border-radius: 999px;
-  font: 600 0.72rem/1 var(--font-data);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.sidebar-toggle:hover {
+  background: var(--surface-raised);
+  color: var(--ink);
 }
 .topbar-actions {
   display: flex;
@@ -559,8 +575,8 @@ h2 {
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
   overflow: hidden;
   margin-bottom: 28px;
-  background: var(--ink);
-  color: var(--surface);
+  background: var(--hero-bg);
+  color: var(--hero-fg);
   border-radius: 14px;
 }
 .catalog-hero-copy {
@@ -1141,7 +1157,7 @@ fieldset legend {
   font-weight: 650;
   font-size: 0.82rem;
 }
-.form-field input,
+.form-field input:not([type="checkbox"]):not([type="radio"]),
 .form-field textarea,
 .form-field select {
   width: 100%;
@@ -1156,6 +1172,37 @@ fieldset legend {
 .form-field textarea {
   min-height: 96px;
   resize: vertical;
+}
+.form-field-checkbox {
+  margin-bottom: 14px;
+}
+.form-field-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 650;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.form-field-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--signal);
+}
+.form-field-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+.form-field-choice input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--signal);
 }
 .helper {
   color: var(--muted);
@@ -1671,7 +1718,7 @@ fieldset legend {
   .mobile-brand {
     display: block;
   }
-  .environment-chip {
+  .sidebar-toggle {
     display: none;
   }
   .profile-copy,
