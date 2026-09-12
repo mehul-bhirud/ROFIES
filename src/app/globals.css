@@ -1441,6 +1441,19 @@ fieldset legend {
   background: var(--danger-soft);
   color: var(--danger);
 }
+
+.inventory-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inventory-row-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .recovery-request-card {
   display: flex;
   flex-direction: column;
