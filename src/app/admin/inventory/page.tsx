@@ -32,7 +32,7 @@ export default async function InventoryPage() {
           </a>
         </div>
       </div>
-      <EquipmentPhotoUpload items={items.map(({ id, name }) => ({ id, name }))} />
+      <EquipmentPhotoUpload items={items.filter((item) => !item.archivedAt).map(({ id, name }) => ({ id, name }))} />
       <section className="panel">
         <div className="table-wrap">
           <table className="data-table">

@@ -47,6 +47,11 @@ const schemas = {
 };
 type Command = keyof typeof schemas;
 
+const knownSafeErrorMessages = new Set<string>([
+  "catalog item has history and cannot be permanently deleted; archive it instead",
+  "an individual asset with this identifier already exists"
+]);
+
 function safeError(referenceId: string, status: number, message: string) {
   return NextResponse.json({ message, referenceId }, { status });
 }
@@ -324,7 +329,9 @@ export async function POST(
         ? "The record changed. Refresh and review current availability."
         : denied
           ? "Resource unavailable."
-          : "The operation could not be committed."
+          : knownSafeErrorMessages.has(result.error.message)
+            ? result.error.message
+            : "The operation could not be committed."
     );
   }
   logEvent("command.committed", {

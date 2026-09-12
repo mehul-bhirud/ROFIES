@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Archive, ArchiveRestore, LoaderCircle, Trash2 } from "lucide-react";
 import type { StorageLocation } from "@/lib/catalog/types";
 
@@ -31,44 +32,57 @@ export function InventoryRowActions({
   trackingMode: "pooled_reusable" | "individual_asset" | "consumable";
   storageLocations: readonly StorageLocation[];
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [showAdjust, setShowAdjust] = useState(false);
   const [showAddUnit, setShowAddUnit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
-  function lifecycleAction(
-    command: "archiveCatalogItem" | "restoreCatalogItem" | "deleteCatalogItem",
-    reason: string
-  ) {
+  function lifecycleAction(command: "archiveCatalogItem" | "restoreCatalogItem", reason: string) {
     startTransition(async () => {
-      const result = await runCommand(command, { catalogItemId, reason });
-      setMessage(result.message);
+      const outcome = await runCommand(command, { catalogItemId, reason });
+      setResult(outcome);
+      if (outcome.ok) router.refresh();
+    });
+  }
+
+  function submitDelete(formData: FormData) {
+    startTransition(async () => {
+      const outcome = await runCommand("deleteCatalogItem", { catalogItemId, reason: formData.get("reason") });
+      setResult(outcome);
+      if (outcome.ok) {
+        setShowDelete(false);
+        router.refresh();
+      }
     });
   }
 
   function submitAdjustment(formData: FormData) {
     startTransition(async () => {
-      const result = await runCommand("adjustStock", {
+      const outcome = await runCommand("adjustStock", {
         catalogItemId,
         storageLocationId: formData.get("storageLocationId") || undefined,
         condition: formData.get("condition"),
         quantityDelta: Number(formData.get("quantityDelta")),
         reason: formData.get("reason")
       });
-      setMessage(result.message);
+      setResult(outcome);
+      if (outcome.ok) router.refresh();
     });
   }
 
   function submitAddUnit(formData: FormData) {
     startTransition(async () => {
-      const result = await runCommand("addIndividualAsset", {
+      const outcome = await runCommand("addIndividualAsset", {
         catalogItemId,
         localIdentifier: formData.get("localIdentifier") || undefined,
         storageLocationId: formData.get("storageLocationId") || undefined,
         condition: formData.get("condition"),
         reason: formData.get("reason")
       });
-      setMessage(result.message);
+      setResult(outcome);
+      if (outcome.ok) router.refresh();
     });
   }
 
@@ -96,9 +110,9 @@ export function InventoryRowActions({
         )}
         <button
           type="button"
-          className="button button-secondary"
+          className="button button-danger"
           disabled={pending}
-          onClick={() => lifecycleAction("deleteCatalogItem", "Deleted from Inventory page")}
+          onClick={() => setShowDelete((value) => !value)}
         >
           <Trash2 size={16} aria-hidden="true" /> Delete
         </button>
@@ -112,6 +126,19 @@ export function InventoryRowActions({
           </button>
         )}
       </div>
+      {showDelete ? (
+        <form className="command-card" action={submitDelete}>
+          <div className="form-field">
+            <label htmlFor={`deleteReason-${catalogItemId}`}>
+              Reason (this permanently deletes the item — only unused items can be deleted)
+            </label>
+            <textarea id={`deleteReason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+          </div>
+          <button className="button button-danger" type="submit" disabled={pending}>
+            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm permanent delete"}
+          </button>
+        </form>
+      ) : null}
       {showAddUnit ? (
         <form className="command-card" action={submitAddUnit}>
           <div className="form-field">
@@ -186,9 +213,9 @@ export function InventoryRowActions({
           </button>
         </form>
       ) : null}
-      {message ? (
-        <p className="command-result" data-state={message.startsWith("Committed") ? "success" : "error"} role="status">
-          {message}
+      {result ? (
+        <p className="command-result" data-state={result.ok ? "success" : "error"} role="status">
+          {result.message}
         </p>
       ) : null}
     </div>

@@ -235,6 +235,9 @@ declare
   v_actor uuid := auth.uid();
   v_existing jsonb;
   v_item public.catalog_items%rowtype;
+  v_tags jsonb;
+  v_aliases jsonb;
+  v_specifications jsonb;
   v_result jsonb;
 begin
   if v_actor is null or not private.has_capability(v_actor,'inventory:manage') then
@@ -258,11 +261,19 @@ begin
     raise exception 'catalog item has history and cannot be permanently deleted; archive it instead' using errcode='P0001';
   end if;
 
+  select coalesce(jsonb_agg(tag order by tag),'[]'::jsonb) into v_tags
+    from public.catalog_tags where catalog_tags.catalog_item_id=delete_catalog_item.catalog_item_id;
+  select coalesce(jsonb_agg(alias order by alias),'[]'::jsonb) into v_aliases
+    from public.catalog_aliases where catalog_aliases.catalog_item_id=delete_catalog_item.catalog_item_id;
+  select coalesce(jsonb_agg(jsonb_build_object('key',key,'value',value) order by key),'[]'::jsonb) into v_specifications
+    from public.catalog_specifications where catalog_specifications.catalog_item_id=delete_catalog_item.catalog_item_id;
+
   delete from public.pool_balances where pool_balances.catalog_item_id = delete_catalog_item.catalog_item_id;
   delete from public.catalog_items where id = delete_catalog_item.catalog_item_id;
 
   insert into public.audit_events(actor_id, action, target_type, target_id, reason, before_summary)
-    values (v_actor, 'catalog_item.deleted', 'catalog_item', delete_catalog_item.catalog_item_id, reason, to_jsonb(v_item));
+    values (v_actor, 'catalog_item.deleted', 'catalog_item', delete_catalog_item.catalog_item_id, reason,
+      jsonb_build_object('item', to_jsonb(v_item), 'tags', v_tags, 'aliases', v_aliases, 'specifications', v_specifications));
   v_result := jsonb_build_object('catalog_item_id', delete_catalog_item.catalog_item_id, 'status', 'committed');
   insert into public.idempotency_keys(actor_id, command, key, response, completed_at)
     values (v_actor, 'delete_catalog_item', idempotency_key, v_result, now());
@@ -362,9 +373,14 @@ begin
     raise exception 'individual assets can only be added to individual-asset items';
   end if;
 
-  insert into public.individual_assets(catalog_item_id, local_identifier, condition, custody_state, storage_location_id)
-    values (add_individual_asset.catalog_item_id, nullif(add_individual_asset.local_identifier,''), v_condition, 'on_hand', add_individual_asset.storage_location_id)
-    returning id into v_asset_id;
+  begin
+    insert into public.individual_assets(catalog_item_id, local_identifier, condition, custody_state, storage_location_id)
+      values (add_individual_asset.catalog_item_id, nullif(add_individual_asset.local_identifier,''), v_condition, 'on_hand', add_individual_asset.storage_location_id)
+      returning id into v_asset_id;
+  exception
+    when unique_violation then
+      raise exception 'an individual asset with this identifier already exists' using errcode='P0001';
+  end;
 
   insert into public.stock_adjustments(catalog_item_id, individual_asset_id, condition_to, quantity_delta, reason, source, actor_id)
     values (add_individual_asset.catalog_item_id, v_asset_id, v_condition, 1, reason, 'acquisition', v_actor);
@@ -420,11 +436,17 @@ returns table (
   usable_on_hand integer,
   repair_quantity integer
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
+begin
+  if not private.has_capability((select auth.uid()),'inventory:manage') then
+    raise exception 'resource unavailable' using errcode='42501';
+  end if;
+
+  return query
   select i.id, i.name, c.name, i.tracking_mode, i.archived_at,
     case when i.tracking_mode='individual_asset'
       then (select count(*) from public.individual_assets a where a.catalog_item_id=i.id and a.archived_at is null and a.custody_state='on_hand' and a.condition in ('perfect','minor_damage'))
@@ -434,8 +456,8 @@ as $$
       else (select coalesce(sum(b.quantity_on_hand),0) from public.pool_balances b where b.catalog_item_id=i.id and b.condition in ('repair_required','not_working')) end::integer
   from public.catalog_items i
   join public.categories c on c.id=i.category_id
-  where private.has_capability((select auth.uid()),'inventory:manage')
   order by i.archived_at nulls first, i.name, i.id;
+end;
 $$;
 
 revoke all on function

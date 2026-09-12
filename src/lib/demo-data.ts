@@ -230,31 +230,55 @@ export const demoInventoryListItems: readonly InventoryListItem[] = [
   }
 ];
 
-export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> = Object.fromEntries(
-  demoCatalog.map((item) => [
-    item.id,
-    {
-      id: item.id,
-      categoryId:
-        demoCategories.find((category) => category.name === item.categoryName)?.id ?? demoCategories[0]!.id,
-      name: item.name,
-      description: item.description,
-      trackingMode: item.trackingMode,
-      publicRemarks: item.publicRemarks,
-      internalRemarks: "",
-      defaultLoanDays: 7,
-      maximumLoanDays: 21,
-      memberQuantityLimit: 3,
-      pickupWindowHours: 24,
-      waitlistEnabled: true,
-      counterIssueEnabled: item.trackingMode === "consumable",
-      lowStockThreshold: 2,
-      acquisitionDate: null,
-      supplier: null,
-      warrantyUntil: null,
-      replacementCost: null,
-      archivedAt: null,
-      tags: item.tags
-    } satisfies CatalogItemDetail
-  ])
-);
+export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> = {
+  ...Object.fromEntries(
+    demoCatalog.map((item) => [
+      item.id,
+      {
+        id: item.id,
+        categoryId:
+          demoCategories.find((category) => category.name === item.categoryName)?.id ?? demoCategories[0]!.id,
+        name: item.name,
+        description: item.description,
+        trackingMode: item.trackingMode,
+        publicRemarks: item.publicRemarks,
+        internalRemarks: "",
+        defaultLoanDays: 7,
+        maximumLoanDays: 21,
+        memberQuantityLimit: 3,
+        pickupWindowHours: 24,
+        waitlistEnabled: true,
+        counterIssueEnabled: item.trackingMode === "consumable",
+        lowStockThreshold: 2,
+        acquisitionDate: null,
+        supplier: null,
+        warrantyUntil: null,
+        replacementCost: null,
+        archivedAt: null,
+        tags: item.tags
+      } satisfies CatalogItemDetail
+    ])
+  ),
+  "00000000-0000-0000-0000-000000000199": {
+    id: "00000000-0000-0000-0000-000000000199",
+    categoryId: demoCategories.find((category) => category.name === "Components")?.id ?? demoCategories[0]!.id,
+    name: "Retired Breadboard Set",
+    description: "",
+    trackingMode: "consumable",
+    publicRemarks: "",
+    internalRemarks: "",
+    defaultLoanDays: 7,
+    maximumLoanDays: 21,
+    memberQuantityLimit: 3,
+    pickupWindowHours: 24,
+    waitlistEnabled: true,
+    counterIssueEnabled: true,
+    lowStockThreshold: 2,
+    acquisitionDate: null,
+    supplier: null,
+    warrantyUntil: null,
+    replacementCost: null,
+    archivedAt: "2026-06-01T10:00:00.000Z",
+    tags: []
+  } satisfies CatalogItemDetail
+};

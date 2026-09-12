@@ -133,7 +133,7 @@ export const getInventoryListItems = cache(async (): Promise<readonly InventoryL
   if (!client) return [];
   const { data, error } = await client.schema("api").rpc("inventory_list");
   if (error) throw new Error(`Inventory list query failed: ${error.code}`);
-  return (data as Record<string, unknown>[]).map((row) => ({
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
     id: row.id as string,
     name: row.name as string,
     categoryName: row.category_name as string,

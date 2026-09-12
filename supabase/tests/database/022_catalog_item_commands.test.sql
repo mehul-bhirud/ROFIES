@@ -1,5 +1,5 @@
 begin;
-select plan(38);
+select plan(45);
 
 select has_function('api','create_catalog_item',array['uuid','text','text','text','text','text','integer','integer','integer','integer','boolean','boolean','integer','date','text','date','numeric','jsonb','jsonb','text'],'catalog item create command exists');
 select has_function('api','update_catalog_item',array['uuid','uuid','text','text','text','text','integer','integer','integer','integer','boolean','boolean','integer','date','text','date','numeric','jsonb','text','text'],'catalog item update command exists');
@@ -129,6 +129,15 @@ select results_eq(
   $$values (2::bigint)$$,
   'the individual-asset item now has two units on record'
 );
+select throws_ok(
+  $$select api.add_individual_asset('00000000-0000-0000-0000-000000000103','RN-JET-02','00000000-0000-0000-0000-000000000301','perfect','Attempting duplicate identifier','asset-test-dup-0001')$$,
+  'P0001',null,'adding a unit with an already-used identifier is rejected'
+);
+select results_eq(
+  $$select count(*)::bigint from public.individual_assets where catalog_item_id='00000000-0000-0000-0000-000000000103'$$,
+  $$values (2::bigint)$$,
+  'the duplicate-identifier attempt did not create a new unit'
+);
 
 select throws_ok(
   $$select api.delete_catalog_item('00000000-0000-0000-0000-000000000101','Attempting to delete a used item','delete-test-0001')$$,
@@ -152,6 +161,54 @@ select results_eq(
   'the deleted draft no longer exists'
 );
 
+-- maintenance_events branch
+select api.create_catalog_item('00000000-0000-0000-0000-000000000202','Plan Test Maintenance Guard',null,'pooled_reusable',null,null,null,null,null,null,true,false,null,null,null,null,null,'[]'::jsonb,'[]'::jsonb,'create-test-maint-guard-0001');
+reset role;
+insert into public.maintenance_events(catalog_item_id, condition_from, condition_to, action, actor_id)
+  values ((select id from public.catalog_items where name='Plan Test Maintenance Guard'),'perfect','repair_required','Test maintenance event','00000000-0000-0000-0000-000000000005');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+select throws_ok(
+  $$select api.delete_catalog_item((select id from public.catalog_items where name='Plan Test Maintenance Guard'),'Attempting to delete an item with maintenance history','delete-test-maint-0001')$$,
+  'P0001',null,'an item with maintenance history cannot be permanently deleted'
+);
+
+-- waitlist_entries branch
+select api.create_catalog_item('00000000-0000-0000-0000-000000000202','Plan Test Waitlist Guard',null,'pooled_reusable',null,null,null,null,null,null,true,false,null,null,null,null,null,'[]'::jsonb,'[]'::jsonb,'create-test-waitlist-guard-0001');
+reset role;
+insert into public.waitlist_entries(member_id, catalog_item_id, quantity, desired_start, desired_end)
+  values ('00000000-0000-0000-0000-000000000005',(select id from public.catalog_items where name='Plan Test Waitlist Guard'),1, now(), now() + interval '1 day');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+select throws_ok(
+  $$select api.delete_catalog_item((select id from public.catalog_items where name='Plan Test Waitlist Guard'),'Attempting to delete an item with waitlist history','delete-test-waitlist-0001')$$,
+  'P0001',null,'an item with waitlist history cannot be permanently deleted'
+);
+
+-- individual_assets branch (isolated from stock_adjustments — insert the asset row directly, bypassing add_individual_asset, since that RPC always pairs a stock_adjustments row too)
+select api.create_catalog_item('00000000-0000-0000-0000-000000000202','Plan Test Individual Asset Guard',null,'individual_asset',null,null,null,null,null,null,true,false,null,null,null,null,null,'[]'::jsonb,'[]'::jsonb,'create-test-asset-guard-0001');
+reset role;
+insert into public.individual_assets(catalog_item_id, local_identifier, condition, custody_state)
+  values ((select id from public.catalog_items where name='Plan Test Individual Asset Guard'),'GUARD-UNIT-01','perfect','on_hand');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+select throws_ok(
+  $$select api.delete_catalog_item((select id from public.catalog_items where name='Plan Test Individual Asset Guard'),'Attempting to delete an item with an individual asset on record','delete-test-asset-0001')$$,
+  'P0001',null,'an item with an individual asset on record cannot be permanently deleted'
+);
+
+-- pool_balances>0 branch, isolated with NO paired stock_adjustments row (insert directly, bypassing create_catalog_item's opening-stock path, which always pairs one) — this is the one branch reviewed as having no FK backstop, so it's the most important of the four to actually exercise
+select api.create_catalog_item('00000000-0000-0000-0000-000000000202','Plan Test Pool Balance Guard',null,'pooled_reusable',null,null,null,null,null,null,true,false,null,null,null,null,null,'[]'::jsonb,'[]'::jsonb,'create-test-poolbal-guard-0001');
+reset role;
+insert into public.pool_balances(catalog_item_id, storage_location_id, condition, quantity_on_hand)
+  values ((select id from public.catalog_items where name='Plan Test Pool Balance Guard'),'00000000-0000-0000-0000-000000000301','perfect',3);
+set local role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000005',true);
+select throws_ok(
+  $$select api.delete_catalog_item((select id from public.catalog_items where name='Plan Test Pool Balance Guard'),'Attempting to delete an item with nonzero pool balance and no other history','delete-test-poolbal-0001')$$,
+  'P0001',null,'an item with a nonzero pool balance and no other history cannot be permanently deleted'
+);
+
 select results_eq(
   $$select (api.catalog_item_detail((select id from public.catalog_items where name='Plan Test Pooled Item Renamed'))->>'name')$$,
   $$values ('Plan Test Pooled Item Renamed'::text)$$,
@@ -161,6 +218,10 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 select throws_ok(
   $$select api.catalog_item_detail('00000000-0000-0000-0000-000000000101')$$,
   '42501',null,'members without inventory:manage cannot read catalog item detail'
+);
+select throws_ok(
+  $$select * from api.inventory_list()$$,
+  '42501',null,'members without inventory:manage cannot list inventory'
 );
 
 select * from finish();

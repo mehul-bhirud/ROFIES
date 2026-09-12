@@ -136,7 +136,7 @@ const catalogItemMetadataFields = {
   internalRemarks: boundedText(0, 4000).optional(),
   defaultLoanDays: z.number().int().min(1).max(90).optional(),
   maximumLoanDays: z.number().int().min(1).max(180).optional(),
-  memberQuantityLimit: z.number().int().min(1).optional(),
+  memberQuantityLimit: z.number().int().min(1).max(2_147_483_647).optional(),
   pickupWindowHours: z.number().int().min(1).max(168).optional(),
   waitlistEnabled: z.boolean().default(true),
   counterIssueEnabled: z.boolean().default(false),
@@ -144,7 +144,7 @@ const catalogItemMetadataFields = {
   acquisitionDate: z.iso.date().optional(),
   supplier: boundedText(1, 200).optional(),
   warrantyUntil: z.iso.date().optional(),
-  replacementCost: z.number().min(0).optional(),
+  replacementCost: z.number().min(0).max(9_999_999_999.99).optional(),
   tags: z.array(boundedText(1, 60)).max(20).default([])
 };
 
@@ -176,6 +176,10 @@ export const createCatalogItemCommandSchema = z
   .refine(loanDaysOrdered, {
     message: "Maximum loan days must be at least default loan days",
     path: ["maximumLoanDays"]
+  })
+  .refine((value) => !value.counterIssueEnabled || value.trackingMode === "consumable", {
+    message: "Counter issue can only be enabled for consumable items",
+    path: ["counterIssueEnabled"]
   });
 
 export const updateCatalogItemCommandSchema = z
