@@ -118,6 +118,9 @@ export function CatalogItemForm({
                 message: body.message ?? `Operation failed. Reference ${body.referenceId ?? "unavailable"}.`
               }
         );
+        if (response.ok && mode === "create") {
+          setTrackingMode("pooled_reusable");
+        }
       } catch {
         setResult({ state: "error", message: "Network unavailable. The operation was not confirmed; retry." });
       }
