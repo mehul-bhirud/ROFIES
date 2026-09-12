@@ -1,4 +1,4 @@
-import type { CatalogItemView, OperationalSummary } from "@/lib/catalog/types";
+import type { CatalogItemDetail, CatalogItemView, Category, InventoryListItem, OperationalSummary, StorageLocation } from "@/lib/catalog/types";
 
 export const demoCatalog: readonly CatalogItemView[] = [
   {
@@ -195,3 +195,66 @@ export const demoActivity = [
     actor: "Meera Joshi"
   }
 ] as const;
+
+export const demoCategories: readonly Category[] = [
+  { id: "00000000-0000-0000-0000-000000000201", name: "Controllers" },
+  { id: "00000000-0000-0000-0000-000000000202", name: "Actuation" },
+  { id: "00000000-0000-0000-0000-000000000203", name: "Fabrication" },
+  { id: "00000000-0000-0000-0000-000000000204", name: "Components" }
+];
+
+export const demoStorageLocations: readonly StorageLocation[] = [
+  { id: "00000000-0000-0000-0000-000000000301", label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4" },
+  { id: "00000000-0000-0000-0000-000000000302", label: "Robotics Lab / Tool wall / Bay 2" },
+  { id: "00000000-0000-0000-0000-000000000303", label: "Electronics Lab / ESD cabinet / Drawer 3 / C-12" }
+];
+
+export const demoInventoryListItems: readonly InventoryListItem[] = [
+  ...demoCatalog.map((item) => ({
+    id: item.id,
+    name: item.name,
+    categoryName: item.categoryName,
+    trackingMode: item.trackingMode,
+    archivedAt: null,
+    usableOnHand: item.usableOnHand,
+    repairQuantity: item.repairQuantity
+  })),
+  {
+    id: "00000000-0000-0000-0000-000000000199",
+    name: "Retired Breadboard Set",
+    categoryName: "Components",
+    trackingMode: "consumable",
+    archivedAt: "2026-06-01T10:00:00.000Z",
+    usableOnHand: 0,
+    repairQuantity: 0
+  }
+];
+
+export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> = Object.fromEntries(
+  demoCatalog.map((item) => [
+    item.id,
+    {
+      id: item.id,
+      categoryId:
+        demoCategories.find((category) => category.name === item.categoryName)?.id ?? demoCategories[0]!.id,
+      name: item.name,
+      description: item.description,
+      trackingMode: item.trackingMode,
+      publicRemarks: item.publicRemarks,
+      internalRemarks: "",
+      defaultLoanDays: 7,
+      maximumLoanDays: 21,
+      memberQuantityLimit: 3,
+      pickupWindowHours: 24,
+      waitlistEnabled: true,
+      counterIssueEnabled: item.trackingMode === "consumable",
+      lowStockThreshold: 2,
+      acquisitionDate: null,
+      supplier: null,
+      warrantyUntil: null,
+      replacementCost: null,
+      archivedAt: null,
+      tags: item.tags
+    } satisfies CatalogItemDetail
+  ])
+);
