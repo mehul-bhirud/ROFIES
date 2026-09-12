@@ -1,16 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
+  addIndividualAssetCommandSchema,
+  adjustStockCommandSchema,
+  archiveCatalogItemCommandSchema,
   cancelRequestCommandSchema,
   counterIssueCommandSchema,
+  createCatalogItemCommandSchema,
   decisionCommandSchema,
+  deleteCatalogItemCommandSchema,
   extensionDecisionCommandSchema,
   extensionRequestCommandSchema,
   handoverCommandSchema,
   lossResolutionCommandSchema,
   memberDecisionCommandSchema,
   requestCommandSchema,
+  restoreCatalogItemCommandSchema,
   returnCommandSchema,
+  updateCatalogItemCommandSchema,
   waitlistCommandSchema
 } from "@/lib/validation/commands";
 import { getServerEnvironment } from "@/lib/env/server";
@@ -29,7 +36,14 @@ const schemas = {
   extensionDecision: extensionDecisionCommandSchema,
   counterIssue: counterIssueCommandSchema,
   loss: lossResolutionCommandSchema,
-  memberDecision: memberDecisionCommandSchema
+  memberDecision: memberDecisionCommandSchema,
+  createCatalogItem: createCatalogItemCommandSchema,
+  updateCatalogItem: updateCatalogItemCommandSchema,
+  archiveCatalogItem: archiveCatalogItemCommandSchema,
+  restoreCatalogItem: restoreCatalogItemCommandSchema,
+  deleteCatalogItem: deleteCatalogItemCommandSchema,
+  adjustStock: adjustStockCommandSchema,
+  addIndividualAsset: addIndividualAssetCommandSchema
 };
 type Command = keyof typeof schemas;
 
@@ -187,6 +201,100 @@ export async function POST(
       loan_line_id: value.loanLineId,
       quantity: value.quantity,
       resolution: value.resolution,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "createCatalogItem") {
+    const value = createCatalogItemCommandSchema.parse(body);
+    result = await client.schema("api").rpc("create_catalog_item", {
+      category_id: value.categoryId,
+      name: value.name,
+      description: value.description ?? "",
+      tracking_mode: value.trackingMode,
+      public_remarks: value.publicRemarks ?? "",
+      internal_remarks: value.internalRemarks ?? "",
+      default_loan_days: value.defaultLoanDays ?? null,
+      maximum_loan_days: value.maximumLoanDays ?? null,
+      member_quantity_limit: value.memberQuantityLimit ?? null,
+      pickup_window_hours: value.pickupWindowHours ?? null,
+      waitlist_enabled: value.waitlistEnabled,
+      counter_issue_enabled: value.counterIssueEnabled,
+      low_stock_threshold: value.lowStockThreshold ?? null,
+      acquisition_date: value.acquisitionDate ?? null,
+      supplier: value.supplier ?? null,
+      warranty_until: value.warrantyUntil ?? null,
+      replacement_cost: value.replacementCost ?? null,
+      tags: value.tags,
+      opening_units: value.openingUnits.map((unit) => ({
+        storage_location_id: unit.storageLocationId ?? null,
+        condition: unit.condition,
+        quantity: unit.quantity ?? null,
+        local_identifier: unit.localIdentifier ?? null
+      })),
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "updateCatalogItem") {
+    const value = updateCatalogItemCommandSchema.parse(body);
+    result = await client.schema("api").rpc("update_catalog_item", {
+      catalog_item_id: value.catalogItemId,
+      category_id: value.categoryId,
+      name: value.name,
+      description: value.description ?? "",
+      public_remarks: value.publicRemarks ?? "",
+      internal_remarks: value.internalRemarks ?? "",
+      default_loan_days: value.defaultLoanDays ?? null,
+      maximum_loan_days: value.maximumLoanDays ?? null,
+      member_quantity_limit: value.memberQuantityLimit ?? null,
+      pickup_window_hours: value.pickupWindowHours ?? null,
+      waitlist_enabled: value.waitlistEnabled,
+      counter_issue_enabled: value.counterIssueEnabled,
+      low_stock_threshold: value.lowStockThreshold ?? null,
+      acquisition_date: value.acquisitionDate ?? null,
+      supplier: value.supplier ?? null,
+      warranty_until: value.warrantyUntil ?? null,
+      replacement_cost: value.replacementCost ?? null,
+      tags: value.tags,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "archiveCatalogItem") {
+    const value = archiveCatalogItemCommandSchema.parse(body);
+    result = await client.schema("api").rpc("archive_catalog_item", {
+      catalog_item_id: value.catalogItemId,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "restoreCatalogItem") {
+    const value = restoreCatalogItemCommandSchema.parse(body);
+    result = await client.schema("api").rpc("restore_catalog_item", {
+      catalog_item_id: value.catalogItemId,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "deleteCatalogItem") {
+    const value = deleteCatalogItemCommandSchema.parse(body);
+    result = await client.schema("api").rpc("delete_catalog_item", {
+      catalog_item_id: value.catalogItemId,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "adjustStock") {
+    const value = adjustStockCommandSchema.parse(body);
+    result = await client.schema("api").rpc("adjust_stock", {
+      catalog_item_id: value.catalogItemId,
+      storage_location_id: value.storageLocationId ?? null,
+      condition: value.condition,
+      quantity_delta: value.quantityDelta,
+      reason: value.reason,
+      idempotency_key: value.idempotencyKey
+    });
+  } else if (command === "addIndividualAsset") {
+    const value = addIndividualAssetCommandSchema.parse(body);
+    result = await client.schema("api").rpc("add_individual_asset", {
+      catalog_item_id: value.catalogItemId,
+      local_identifier: value.localIdentifier ?? null,
+      storage_location_id: value.storageLocationId ?? null,
+      condition: value.condition,
       reason: value.reason,
       idempotency_key: value.idempotencyKey
     });
