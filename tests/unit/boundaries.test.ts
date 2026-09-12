@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedInstitutionalIdentity } from "@/lib/auth/identity";
 import { isTrustedMutationOrigin } from "@/lib/safety/origin";
-import { handoverCommandSchema, requestCommandSchema } from "@/lib/validation/commands";
+import {
+  adjustStockCommandSchema,
+  createCatalogItemCommandSchema,
+  deleteCatalogItemCommandSchema,
+  handoverCommandSchema,
+  requestCommandSchema,
+  updateCatalogItemCommandSchema
+} from "@/lib/validation/commands";
 
 describe("server boundaries", () => {
   it("accepts only verified identities from an exact allowed domain", () => {
@@ -64,5 +71,67 @@ describe("server boundaries", () => {
       }).success
     ).toBe(true);
     expect(handoverCommandSchema.safeParse({ reservationId: "bad" }).success).toBe(false);
+  });
+
+  it("validates catalog item create/update/delete/adjust-stock command shapes", () => {
+    expect(
+      createCatalogItemCommandSchema.safeParse({
+        categoryId: "00000000-0000-0000-0000-000000000201",
+        name: "Bench Multimeter",
+        trackingMode: "pooled_reusable",
+        openingUnits: [
+          {
+            storageLocationId: "00000000-0000-0000-0000-000000000301",
+            condition: "perfect",
+            quantity: 4
+          }
+        ],
+        idempotencyKey: "create-catalog-item-0001"
+      }).success
+    ).toBe(true);
+    expect(
+      createCatalogItemCommandSchema.safeParse({
+        categoryId: "00000000-0000-0000-0000-000000000201",
+        name: "Bench Multimeter",
+        trackingMode: "pooled_reusable",
+        defaultLoanDays: 10,
+        maximumLoanDays: 5,
+        idempotencyKey: "create-catalog-item-0002"
+      }).success
+    ).toBe(false);
+    expect(
+      updateCatalogItemCommandSchema.safeParse({
+        catalogItemId: "00000000-0000-0000-0000-000000000101",
+        categoryId: "00000000-0000-0000-0000-000000000201",
+        name: "Arduino Mega 2560",
+        reason: "Corrected the public remarks",
+        idempotencyKey: "update-catalog-item-0001"
+      }).success
+    ).toBe(true);
+    expect(
+      deleteCatalogItemCommandSchema.safeParse({
+        catalogItemId: "bad-id",
+        reason: "x",
+        idempotencyKey: "delete-catalog-item-0001"
+      }).success
+    ).toBe(false);
+    expect(
+      adjustStockCommandSchema.safeParse({
+        catalogItemId: "00000000-0000-0000-0000-000000000101",
+        condition: "perfect",
+        quantityDelta: 0,
+        reason: "Recount after audit",
+        idempotencyKey: "adjust-stock-0001"
+      }).success
+    ).toBe(false);
+    expect(
+      adjustStockCommandSchema.safeParse({
+        catalogItemId: "00000000-0000-0000-0000-000000000101",
+        condition: "perfect",
+        quantityDelta: -2,
+        reason: "Recount after audit",
+        idempotencyKey: "adjust-stock-0002"
+      }).success
+    ).toBe(true);
   });
 });

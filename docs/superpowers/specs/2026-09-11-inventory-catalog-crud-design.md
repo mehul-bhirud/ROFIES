@@ -17,6 +17,7 @@ not yet exposed"). This spec closes that gap.
 ## Scope
 
 In scope:
+
 - Create a catalog item (metadata + optional opening stock).
 - Edit a catalog item's metadata/policy fields.
 - Archive a catalog item (soft retire) and restore it (undo an accidental
@@ -29,6 +30,7 @@ In scope:
 - Add one more unit to an individual-asset item.
 
 Out of scope (YAGNI for v1, noted so it isn't silently forgotten):
+
 - Editing structured aliases/specifications (key-value pairs) — stays
   read/whatever-it-is-today; only a flat, comma-separated tags list is
   editable.
@@ -48,12 +50,13 @@ No schema changes. Every table this feature touches already exists:
 `audit_events`, `idempotency_keys`.
 
 Relevant existing constraints the commands must respect:
+
 - `catalog_items.return_required = (tracking_mode <> 'consumable')` — derived,
   never user-supplied.
 - `catalog_items.maximum_loan_days is null or default_loan_days is null or
-  maximum_loan_days >= default_loan_days`.
+maximum_loan_days >= default_loan_days`.
 - `pool_balances` uniqueness on `(catalog_item_id, storage_location_id,
-  condition)`, `quantity_on_hand >= 0`.
+condition)`, `quantity_on_hand >= 0`.
 - `individual_assets.local_identifier` unique when not null.
 
 ## Commands (new migration `supabase/migrations/202609110001_catalog_item_commands.sql`)
@@ -69,13 +72,13 @@ a `jsonb` result. Revoked from `public, anon`; granted `execute` to
 
 1. **`api.create_catalog_item`**
    `(category_id uuid, name text, description text, tracking_mode text,
-   public_remarks text, internal_remarks text, default_loan_days integer,
-   maximum_loan_days integer, member_quantity_limit integer,
-   pickup_window_hours integer, waitlist_enabled boolean,
-   counter_issue_enabled boolean, low_stock_threshold integer,
-   acquisition_date date, supplier text, warranty_until date,
-   replacement_cost numeric, tags jsonb, opening_units jsonb,
-   idempotency_key text)`
+public_remarks text, internal_remarks text, default_loan_days integer,
+maximum_loan_days integer, member_quantity_limit integer,
+pickup_window_hours integer, waitlist_enabled boolean,
+counter_issue_enabled boolean, low_stock_threshold integer,
+acquisition_date date, supplier text, warranty_until date,
+replacement_cost numeric, tags jsonb, opening_units jsonb,
+idempotency_key text)`
    - `tags`: jsonb array of strings (0–20, each 1–60 chars).
    - `opening_units`: jsonb array. For `pooled_reusable`/`consumable`, each
      element is `{storage_location_id, condition, quantity}` and becomes a
@@ -94,36 +97,36 @@ a `jsonb` result. Revoked from `public, anon`; granted `execute` to
 
 2. **`api.update_catalog_item`**
    `(catalog_item_id uuid, category_id uuid, name text, description text,
-   public_remarks text, internal_remarks text, default_loan_days integer,
-   maximum_loan_days integer, member_quantity_limit integer,
-   pickup_window_hours integer, waitlist_enabled boolean,
-   counter_issue_enabled boolean, low_stock_threshold integer,
-   acquisition_date date, supplier text, warranty_until date,
-   replacement_cost numeric, tags jsonb, reason text, idempotency_key text)`
+public_remarks text, internal_remarks text, default_loan_days integer,
+maximum_loan_days integer, member_quantity_limit integer,
+pickup_window_hours integer, waitlist_enabled boolean,
+counter_issue_enabled boolean, low_stock_threshold integer,
+acquisition_date date, supplier text, warranty_until date,
+replacement_cost numeric, tags jsonb, reason text, idempotency_key text)`
    - Editable regardless of archive state (an archived item can still have a
      typo fixed). `tracking_mode` is not a parameter — immutable.
    - Replaces the tag set wholesale (delete + reinsert) for simplicity.
    - Audit action: `catalog_item.updated`, `reason` stored.
 
 3. **`api.archive_catalog_item`** `(catalog_item_id uuid, reason text,
-   idempotency_key text)`
+idempotency_key text)`
    - `update ... set archived_at = now() where id = ... and archived_at is
-     null`; raises if not found or already archived.
+null`; raises if not found or already archived.
    - Audit action: `catalog_item.archived`.
 
 4. **`api.restore_catalog_item`** `(catalog_item_id uuid, reason text,
-   idempotency_key text)`
+idempotency_key text)`
    - Mirror of archive: `archived_at = null where archived_at is not null`.
    - Audit action: `catalog_item.restored`.
 
 5. **`api.delete_catalog_item`** `(catalog_item_id uuid, reason text,
-   idempotency_key text)`
+idempotency_key text)`
    - Permitted only when **all** of the following hold: no `request_lines`,
      no `stock_adjustments`, no `maintenance_events`, no `waitlist_entries`,
      no `individual_assets` (any row, archived or not) reference the item,
      and every `pool_balances` row for it has `quantity_on_hand = 0`.
    - Otherwise raises `'catalog item has history and cannot be permanently
-     deleted; archive it instead'` (errcode `P0001`, surfaced by the route
+deleted; archive it instead'` (errcode `P0001`, surfaced by the route
      as a 400 with that message).
    - On success: captures `to_jsonb(v_item)` into `audit_events.before_summary`
      (the row won't exist to inspect afterward), deletes zero-quantity
@@ -133,20 +136,20 @@ a `jsonb` result. Revoked from `public, anon`; granted `execute` to
    - Audit action: `catalog_item.deleted`.
 
 6. **`api.adjust_stock`** `(catalog_item_id uuid, storage_location_id uuid,
-   condition text, quantity_delta integer, reason text, idempotency_key
-   text)`
+condition text, quantity_delta integer, reason text, idempotency_key
+text)`
    - Only for `tracking_mode in ('pooled_reusable','consumable')` — raises
      otherwise (individual assets use command 6 below instead).
    - Upserts `pool_balances` (`quantity_on_hand = quantity_on_hand +
-     quantity_delta`, guarded `>= 0`, else raises `'insufficient stock for
-     this adjustment'`).
+quantity_delta`, guarded `>= 0`, else raises `'insufficient stock for
+this adjustment'`).
    - Inserts `stock_adjustments` (`source = 'acquisition'` when
      `quantity_delta > 0`, else `'correction'`).
    - Audit action: `stock.adjusted`.
 
 7. **`api.add_individual_asset`** `(catalog_item_id uuid, local_identifier
-   text, storage_location_id uuid, condition text, reason text,
-   idempotency_key text)`
+text, storage_location_id uuid, condition text, reason text,
+idempotency_key text)`
    - Only for `tracking_mode = 'individual_asset'`.
    - Inserts one `individual_assets` row (`custody_state = 'on_hand'`) and a
      `stock_adjustments` row (`quantity_delta = 1`, `source = 'acquisition'`,
@@ -216,6 +219,7 @@ reusing existing CSS classes (`command-card`, `form-field`, `command-result`,
 `button button-primary`).
 
 The Inventory page (`src/app/admin/inventory/page.tsx`) gets:
+
 - An "Add item" link to `/admin/inventory/new` next to the existing "Safe
   CSV" button.
 - Per-row actions: **Edit** (link to the edit page), **Adjust stock** (small
@@ -267,4 +271,3 @@ already does.
   existing demo branch), so a second pass against the real Supabase project
   (`ROFIES_DEMO_MODE=false`) is needed before calling this done end-to-end —
   noted here so it isn't skipped silently.
-
