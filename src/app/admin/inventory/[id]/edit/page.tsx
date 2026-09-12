@@ -4,7 +4,11 @@ import { CatalogItemForm } from "@/components/inventory/catalog-item-form";
 import { requireAnyCapability } from "@/lib/auth/require-capability";
 import { getCategories, getCatalogItemForEdit, getStorageLocations } from "@/lib/catalog/queries";
 
-export default async function EditInventoryItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditInventoryItemPage({
+  params
+}: {
+  params: Promise<{ id: string }>;
+}) {
   await requireAnyCapability(["inventory:manage"]);
   const { id } = await params;
   const [categories, storageLocations, item] = await Promise.all([
@@ -22,7 +26,12 @@ export default async function EditInventoryItemPage({ params }: { params: Promis
           <p>Tracking mode is fixed at creation and cannot be changed here.</p>
         </div>
       </div>
-      <CatalogItemForm mode="edit" categories={categories} storageLocations={storageLocations} item={item} />
+      <CatalogItemForm
+        mode="edit"
+        categories={categories}
+        storageLocations={storageLocations}
+        item={item}
+      />
     </AppShell>
   );
 }

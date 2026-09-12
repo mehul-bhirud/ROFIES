@@ -17,7 +17,9 @@ async function runCommand(command: string, payload: Record<string, unknown>) {
   const body = (await response.json()) as { message?: string; referenceId?: string };
   return {
     ok: response.ok,
-    message: response.ok ? "Committed." : (body.message ?? `Failed. Reference ${body.referenceId ?? "unavailable"}.`)
+    message: response.ok
+      ? "Committed."
+      : (body.message ?? `Failed. Reference ${body.referenceId ?? "unavailable"}.`)
   };
 }
 
@@ -49,7 +51,10 @@ export function InventoryRowActions({
 
   function submitDelete(formData: FormData) {
     startTransition(async () => {
-      const outcome = await runCommand("deleteCatalogItem", { catalogItemId, reason: formData.get("reason") });
+      const outcome = await runCommand("deleteCatalogItem", {
+        catalogItemId,
+        reason: formData.get("reason")
+      });
       setResult(outcome);
       if (outcome.ok) {
         setShowDelete(false);
@@ -117,11 +122,19 @@ export function InventoryRowActions({
           <Trash2 size={16} aria-hidden="true" /> Delete
         </button>
         {trackingMode !== "individual_asset" ? (
-          <button type="button" className="button button-secondary" onClick={() => setShowAdjust((value) => !value)}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowAdjust((value) => !value)}
+          >
             Adjust stock
           </button>
         ) : (
-          <button type="button" className="button button-secondary" onClick={() => setShowAddUnit((value) => !value)}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowAddUnit((value) => !value)}
+          >
             Add unit
           </button>
         )}
@@ -132,10 +145,20 @@ export function InventoryRowActions({
             <label htmlFor={`deleteReason-${catalogItemId}`}>
               Reason (this permanently deletes the item — only unused items can be deleted)
             </label>
-            <textarea id={`deleteReason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+            <textarea
+              id={`deleteReason-${catalogItemId}`}
+              name="reason"
+              minLength={3}
+              maxLength={1000}
+              required
+            />
           </div>
           <button className="button button-danger" type="submit" disabled={pending}>
-            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm permanent delete"}
+            {pending ? (
+              <LoaderCircle className="spin" size={16} aria-hidden="true" />
+            ) : (
+              "Confirm permanent delete"
+            )}
           </button>
         </form>
       ) : null}
@@ -147,7 +170,11 @@ export function InventoryRowActions({
           </div>
           <div className="form-field">
             <label htmlFor={`unitStorageLocationId-${catalogItemId}`}>Storage location</label>
-            <select id={`unitStorageLocationId-${catalogItemId}`} name="storageLocationId" defaultValue="">
+            <select
+              id={`unitStorageLocationId-${catalogItemId}`}
+              name="storageLocationId"
+              defaultValue=""
+            >
               <option value="">Unassigned</option>
               {storageLocations.map((location) => (
                 <option key={location.id} value={location.id}>
@@ -168,10 +195,20 @@ export function InventoryRowActions({
           </div>
           <div className="form-field">
             <label htmlFor={`unitReason-${catalogItemId}`}>Reason</label>
-            <textarea id={`unitReason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+            <textarea
+              id={`unitReason-${catalogItemId}`}
+              name="reason"
+              minLength={3}
+              maxLength={1000}
+              required
+            />
           </div>
           <button className="button button-primary" type="submit" disabled={pending}>
-            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm new unit"}
+            {pending ? (
+              <LoaderCircle className="spin" size={16} aria-hidden="true" />
+            ) : (
+              "Confirm new unit"
+            )}
           </button>
         </form>
       ) : null}
@@ -179,7 +216,11 @@ export function InventoryRowActions({
         <form className="command-card" action={submitAdjustment}>
           <div className="form-field">
             <label htmlFor={`storageLocationId-${catalogItemId}`}>Storage location</label>
-            <select id={`storageLocationId-${catalogItemId}`} name="storageLocationId" defaultValue="">
+            <select
+              id={`storageLocationId-${catalogItemId}`}
+              name="storageLocationId"
+              defaultValue=""
+            >
               <option value="">Unassigned</option>
               {storageLocations.map((location) => (
                 <option key={location.id} value={location.id}>
@@ -202,14 +243,29 @@ export function InventoryRowActions({
             <label htmlFor={`quantityDelta-${catalogItemId}`}>
               Quantity change (use a negative number to remove stock)
             </label>
-            <input id={`quantityDelta-${catalogItemId}`} name="quantityDelta" type="number" required />
+            <input
+              id={`quantityDelta-${catalogItemId}`}
+              name="quantityDelta"
+              type="number"
+              required
+            />
           </div>
           <div className="form-field">
             <label htmlFor={`reason-${catalogItemId}`}>Reason</label>
-            <textarea id={`reason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+            <textarea
+              id={`reason-${catalogItemId}`}
+              name="reason"
+              minLength={3}
+              maxLength={1000}
+              required
+            />
           </div>
           <button className="button button-primary" type="submit" disabled={pending}>
-            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm adjustment"}
+            {pending ? (
+              <LoaderCircle className="spin" size={16} aria-hidden="true" />
+            ) : (
+              "Confirm adjustment"
+            )}
           </button>
         </form>
       ) : null}

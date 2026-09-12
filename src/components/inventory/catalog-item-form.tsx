@@ -26,7 +26,9 @@ export function CatalogItemForm({
   item?: CatalogItemDetail;
 }) {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ state: "success" | "error"; message: string } | null>(null);
+  const [result, setResult] = useState<{ state: "success" | "error"; message: string } | null>(
+    null
+  );
   const [trackingMode, setTrackingMode] = useState<CatalogItemDetail["trackingMode"]>(
     item?.trackingMode ?? "pooled_reusable"
   );
@@ -115,14 +117,19 @@ export function CatalogItemForm({
               }
             : {
                 state: "error",
-                message: body.message ?? `Operation failed. Reference ${body.referenceId ?? "unavailable"}.`
+                message:
+                  body.message ??
+                  `Operation failed. Reference ${body.referenceId ?? "unavailable"}.`
               }
         );
         if (response.ok && mode === "create") {
           setTrackingMode("pooled_reusable");
         }
       } catch {
-        setResult({ state: "error", message: "Network unavailable. The operation was not confirmed; retry." });
+        setResult({
+          state: "error",
+          message: "Network unavailable. The operation was not confirmed; retry."
+        });
       }
     });
   }
@@ -148,11 +155,23 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label htmlFor="name">Name</label>
-        <input id="name" name="name" minLength={2} maxLength={160} defaultValue={item?.name} required />
+        <input
+          id="name"
+          name="name"
+          minLength={2}
+          maxLength={160}
+          defaultValue={item?.name}
+          required
+        />
       </div>
       <div className="form-field">
         <label htmlFor="description">Description</label>
-        <textarea id="description" name="description" maxLength={4000} defaultValue={item?.description} />
+        <textarea
+          id="description"
+          name="description"
+          maxLength={4000}
+          defaultValue={item?.description}
+        />
       </div>
       {mode === "create" ? (
         <fieldset className="decision-line">
@@ -178,11 +197,21 @@ export function CatalogItemForm({
       )}
       <div className="form-field">
         <label htmlFor="publicRemarks">Public remarks</label>
-        <textarea id="publicRemarks" name="publicRemarks" maxLength={2000} defaultValue={item?.publicRemarks} />
+        <textarea
+          id="publicRemarks"
+          name="publicRemarks"
+          maxLength={2000}
+          defaultValue={item?.publicRemarks}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="internalRemarks">Internal remarks (staff only)</label>
-        <textarea id="internalRemarks" name="internalRemarks" maxLength={4000} defaultValue={item?.internalRemarks} />
+        <textarea
+          id="internalRemarks"
+          name="internalRemarks"
+          maxLength={4000}
+          defaultValue={item?.internalRemarks}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="defaultLoanDays">Default loan days</label>
@@ -239,19 +268,32 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label>
-          <input type="checkbox" name="waitlistEnabled" defaultChecked={item?.waitlistEnabled ?? true} />
+          <input
+            type="checkbox"
+            name="waitlistEnabled"
+            defaultChecked={item?.waitlistEnabled ?? true}
+          />
           Allow waitlisting
         </label>
       </div>
       <div className="form-field">
         <label>
-          <input type="checkbox" name="counterIssueEnabled" defaultChecked={item?.counterIssueEnabled ?? false} />
+          <input
+            type="checkbox"
+            name="counterIssueEnabled"
+            defaultChecked={item?.counterIssueEnabled ?? false}
+          />
           Allow counter issue (consumables only)
         </label>
       </div>
       <div className="form-field">
         <label htmlFor="acquisitionDate">Acquisition date</label>
-        <input id="acquisitionDate" name="acquisitionDate" type="date" defaultValue={item?.acquisitionDate ?? ""} />
+        <input
+          id="acquisitionDate"
+          name="acquisitionDate"
+          type="date"
+          defaultValue={item?.acquisitionDate ?? ""}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="supplier">Supplier</label>
@@ -259,7 +301,12 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label htmlFor="warrantyUntil">Warranty until</label>
-        <input id="warrantyUntil" name="warrantyUntil" type="date" defaultValue={item?.warrantyUntil ?? ""} />
+        <input
+          id="warrantyUntil"
+          name="warrantyUntil"
+          type="date"
+          defaultValue={item?.warrantyUntil ?? ""}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="replacementCost">Replacement cost</label>
@@ -278,7 +325,9 @@ export function CatalogItemForm({
       </div>
       {mode === "create" ? (
         <fieldset className="decision-line">
-          <legend>{trackingMode === "individual_asset" ? "Units (optional)" : "Opening stock (optional)"}</legend>
+          <legend>
+            {trackingMode === "individual_asset" ? "Units (optional)" : "Opening stock (optional)"}
+          </legend>
           <div className="form-field">
             <label htmlFor="openingStorageLocationId">Storage location</label>
             <select id="openingStorageLocationId" name="openingStorageLocationId" defaultValue="">
@@ -303,7 +352,11 @@ export function CatalogItemForm({
           {trackingMode === "individual_asset" ? (
             <div className="form-field">
               <label htmlFor="assetIdentifiers">Unit identifiers, one per line</label>
-              <textarea id="assetIdentifiers" name="assetIdentifiers" placeholder={"RN-JET-01\nRN-JET-02"} />
+              <textarea
+                id="assetIdentifiers"
+                name="assetIdentifiers"
+                placeholder={"RN-JET-01\nRN-JET-02"}
+              />
             </div>
           ) : (
             <div className="form-field">
@@ -320,7 +373,11 @@ export function CatalogItemForm({
         </div>
       ) : null}
       <button className="button button-primary" type="submit" disabled={pending}>
-        {pending ? <LoaderCircle className="spin" size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
+        {pending ? (
+          <LoaderCircle className="spin" size={18} aria-hidden="true" />
+        ) : (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        )}
         {pending ? "Committing…" : mode === "create" ? "Create item" : "Save changes"}
       </button>
       {result ? (

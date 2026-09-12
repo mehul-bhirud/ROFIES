@@ -1,4 +1,11 @@
-import type { CatalogItemDetail, CatalogItemView, Category, InventoryListItem, OperationalSummary, StorageLocation } from "@/lib/catalog/types";
+import type {
+  CatalogItemDetail,
+  CatalogItemView,
+  Category,
+  InventoryListItem,
+  OperationalSummary,
+  StorageLocation
+} from "@/lib/catalog/types";
 
 export const demoCatalog: readonly CatalogItemView[] = [
   {
@@ -204,9 +211,15 @@ export const demoCategories: readonly Category[] = [
 ];
 
 export const demoStorageLocations: readonly StorageLocation[] = [
-  { id: "00000000-0000-0000-0000-000000000301", label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4" },
+  {
+    id: "00000000-0000-0000-0000-000000000301",
+    label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4"
+  },
   { id: "00000000-0000-0000-0000-000000000302", label: "Robotics Lab / Tool wall / Bay 2" },
-  { id: "00000000-0000-0000-0000-000000000303", label: "Electronics Lab / ESD cabinet / Drawer 3 / C-12" }
+  {
+    id: "00000000-0000-0000-0000-000000000303",
+    label: "Electronics Lab / ESD cabinet / Drawer 3 / C-12"
+  }
 ];
 
 export const demoInventoryListItems: readonly InventoryListItem[] = [
@@ -237,7 +250,8 @@ export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> 
       {
         id: item.id,
         categoryId:
-          demoCategories.find((category) => category.name === item.categoryName)?.id ?? demoCategories[0]!.id,
+          demoCategories.find((category) => category.name === item.categoryName)?.id ??
+          demoCategories[0]!.id,
         name: item.name,
         description: item.description,
         trackingMode: item.trackingMode,
@@ -261,7 +275,9 @@ export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> 
   ),
   "00000000-0000-0000-0000-000000000199": {
     id: "00000000-0000-0000-0000-000000000199",
-    categoryId: demoCategories.find((category) => category.name === "Components")?.id ?? demoCategories[0]!.id,
+    categoryId:
+      demoCategories.find((category) => category.name === "Components")?.id ??
+      demoCategories[0]!.id,
     name: "Retired Breadboard Set",
     description: "",
     trackingMode: "consumable",

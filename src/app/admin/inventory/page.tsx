@@ -9,7 +9,10 @@ import { getInventoryListItems, getStorageLocations } from "@/lib/catalog/querie
 
 export default async function InventoryPage() {
   await requireAnyCapability(["inventory:manage"]);
-  const [items, storageLocations] = await Promise.all([getInventoryListItems(), getStorageLocations()]);
+  const [items, storageLocations] = await Promise.all([
+    getInventoryListItems(),
+    getStorageLocations()
+  ]);
   return (
     <AppShell mode="staff">
       <div className="page-head">
@@ -32,7 +35,9 @@ export default async function InventoryPage() {
           </a>
         </div>
       </div>
-      <EquipmentPhotoUpload items={items.filter((item) => !item.archivedAt).map(({ id, name }) => ({ id, name }))} />
+      <EquipmentPhotoUpload
+        items={items.filter((item) => !item.archivedAt).map(({ id, name }) => ({ id, name }))}
+      />
       <section className="panel">
         <div className="table-wrap">
           <table className="data-table">
@@ -72,7 +77,10 @@ export default async function InventoryPage() {
                     )}
                   </td>
                   <td data-label="Actions">
-                    <Link href={`/admin/inventory/${item.id}/edit`} className="button button-secondary">
+                    <Link
+                      href={`/admin/inventory/${item.id}/edit`}
+                      className="button button-secondary"
+                    >
                       Edit
                     </Link>
                     <InventoryRowActions

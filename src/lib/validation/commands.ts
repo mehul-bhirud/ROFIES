@@ -148,7 +148,10 @@ const catalogItemMetadataFields = {
   tags: z.array(boundedText(1, 60)).max(20).default([])
 };
 
-function loanDaysOrdered(value: { defaultLoanDays?: number | undefined; maximumLoanDays?: number | undefined }) {
+function loanDaysOrdered(value: {
+  defaultLoanDays?: number | undefined;
+  maximumLoanDays?: number | undefined;
+}) {
   return (
     value.maximumLoanDays === undefined ||
     value.defaultLoanDays === undefined ||

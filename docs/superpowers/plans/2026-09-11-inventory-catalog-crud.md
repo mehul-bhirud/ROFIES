@@ -24,10 +24,12 @@
 ### Task 1: SQL commands migration + pgTAP tests
 
 **Files:**
+
 - Create: `supabase/migrations/202609110001_catalog_item_commands.sql`
 - Create: `supabase/tests/database/022_catalog_item_commands.test.sql`
 
 **Interfaces:**
+
 - Consumes: `private.has_capability(uuid, text)` (existing), `public.catalog_items`/`categories`/`catalog_tags`/`pool_balances`/`individual_assets`/`stock_adjustments`/`audit_events`/`idempotency_keys` (existing tables).
 - Produces (for later tasks): `api.create_catalog_item(...)`, `api.update_catalog_item(...)`, `api.archive_catalog_item(uuid,text,text)`, `api.restore_catalog_item(uuid,text,text)`, `api.delete_catalog_item(uuid,text,text)`, `api.adjust_stock(uuid,uuid,text,integer,text,text)`, `api.add_individual_asset(uuid,text,uuid,text,text,text)`, `api.catalog_item_detail(uuid) returns jsonb`, `api.inventory_list() returns table(...)`.
 
@@ -687,10 +689,12 @@ git commit -m "feat(db): add catalog item CRUD, stock adjustment, and staff inve
 ### Task 2: Zod command schemas + unit tests
 
 **Files:**
+
 - Modify: `src/lib/validation/commands.ts`
 - Modify: `tests/unit/boundaries.test.ts`
 
 **Interfaces:**
+
 - Consumes: `boundedText`, `databaseId` (existing helpers in the same file).
 - Produces: `createCatalogItemCommandSchema`, `updateCatalogItemCommandSchema`, `archiveCatalogItemCommandSchema`, `restoreCatalogItemCommandSchema`, `deleteCatalogItemCommandSchema`, `adjustStockCommandSchema`, `addIndividualAssetCommandSchema` — all exported from `@/lib/validation/commands`, all requiring an `idempotencyKey: string` field, consumed by Task 3.
 
@@ -712,67 +716,67 @@ import {
 Add a new `it` block inside the existing `describe("server boundaries", ...)`:
 
 ```ts
-  it("validates catalog item create/update/delete/adjust-stock command shapes", () => {
-    expect(
-      createCatalogItemCommandSchema.safeParse({
-        categoryId: "00000000-0000-0000-0000-000000000201",
-        name: "Bench Multimeter",
-        trackingMode: "pooled_reusable",
-        openingUnits: [
-          {
-            storageLocationId: "00000000-0000-0000-0000-000000000301",
-            condition: "perfect",
-            quantity: 4
-          }
-        ],
-        idempotencyKey: "create-catalog-item-0001"
-      }).success
-    ).toBe(true);
-    expect(
-      createCatalogItemCommandSchema.safeParse({
-        categoryId: "00000000-0000-0000-0000-000000000201",
-        name: "Bench Multimeter",
-        trackingMode: "pooled_reusable",
-        defaultLoanDays: 10,
-        maximumLoanDays: 5,
-        idempotencyKey: "create-catalog-item-0002"
-      }).success
-    ).toBe(false);
-    expect(
-      updateCatalogItemCommandSchema.safeParse({
-        catalogItemId: "00000000-0000-0000-0000-000000000101",
-        categoryId: "00000000-0000-0000-0000-000000000201",
-        name: "Arduino Mega 2560",
-        reason: "Corrected the public remarks",
-        idempotencyKey: "update-catalog-item-0001"
-      }).success
-    ).toBe(true);
-    expect(
-      deleteCatalogItemCommandSchema.safeParse({
-        catalogItemId: "bad-id",
-        reason: "x",
-        idempotencyKey: "delete-catalog-item-0001"
-      }).success
-    ).toBe(false);
-    expect(
-      adjustStockCommandSchema.safeParse({
-        catalogItemId: "00000000-0000-0000-0000-000000000101",
-        condition: "perfect",
-        quantityDelta: 0,
-        reason: "Recount after audit",
-        idempotencyKey: "adjust-stock-0001"
-      }).success
-    ).toBe(false);
-    expect(
-      adjustStockCommandSchema.safeParse({
-        catalogItemId: "00000000-0000-0000-0000-000000000101",
-        condition: "perfect",
-        quantityDelta: -2,
-        reason: "Recount after audit",
-        idempotencyKey: "adjust-stock-0002"
-      }).success
-    ).toBe(true);
-  });
+it("validates catalog item create/update/delete/adjust-stock command shapes", () => {
+  expect(
+    createCatalogItemCommandSchema.safeParse({
+      categoryId: "00000000-0000-0000-0000-000000000201",
+      name: "Bench Multimeter",
+      trackingMode: "pooled_reusable",
+      openingUnits: [
+        {
+          storageLocationId: "00000000-0000-0000-0000-000000000301",
+          condition: "perfect",
+          quantity: 4
+        }
+      ],
+      idempotencyKey: "create-catalog-item-0001"
+    }).success
+  ).toBe(true);
+  expect(
+    createCatalogItemCommandSchema.safeParse({
+      categoryId: "00000000-0000-0000-0000-000000000201",
+      name: "Bench Multimeter",
+      trackingMode: "pooled_reusable",
+      defaultLoanDays: 10,
+      maximumLoanDays: 5,
+      idempotencyKey: "create-catalog-item-0002"
+    }).success
+  ).toBe(false);
+  expect(
+    updateCatalogItemCommandSchema.safeParse({
+      catalogItemId: "00000000-0000-0000-0000-000000000101",
+      categoryId: "00000000-0000-0000-0000-000000000201",
+      name: "Arduino Mega 2560",
+      reason: "Corrected the public remarks",
+      idempotencyKey: "update-catalog-item-0001"
+    }).success
+  ).toBe(true);
+  expect(
+    deleteCatalogItemCommandSchema.safeParse({
+      catalogItemId: "bad-id",
+      reason: "x",
+      idempotencyKey: "delete-catalog-item-0001"
+    }).success
+  ).toBe(false);
+  expect(
+    adjustStockCommandSchema.safeParse({
+      catalogItemId: "00000000-0000-0000-0000-000000000101",
+      condition: "perfect",
+      quantityDelta: 0,
+      reason: "Recount after audit",
+      idempotencyKey: "adjust-stock-0001"
+    }).success
+  ).toBe(false);
+  expect(
+    adjustStockCommandSchema.safeParse({
+      catalogItemId: "00000000-0000-0000-0000-000000000101",
+      condition: "perfect",
+      quantityDelta: -2,
+      reason: "Recount after audit",
+      idempotencyKey: "adjust-stock-0002"
+    }).success
+  ).toBe(true);
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -904,9 +908,11 @@ git commit -m "feat(validation): add zod schemas for catalog item CRUD and stock
 ### Task 3: Route wiring for the new commands
 
 **Files:**
+
 - Modify: `src/app/api/commands/[command]/route.ts`
 
 **Interfaces:**
+
 - Consumes: the 7 schemas from Task 2, the 7 mutating RPC functions from Task 1.
 - Produces: `POST /api/commands/createCatalogItem`, `.../updateCatalogItem`, `.../archiveCatalogItem`, `.../restoreCatalogItem`, `.../deleteCatalogItem`, `.../adjustStock`, `.../addIndividualAsset` — consumed by Task 5 and Task 6's client components.
 
@@ -915,9 +921,11 @@ git commit -m "feat(validation): add zod schemas for catalog item CRUD and stock
 There is no existing per-branch unit test for this route (the other nine commands aren't tested here either — coverage for the route lives in the pgTAP suite via the RPCs it calls, already green from Task 1, and in `tests/e2e`). Confirm this task's only verification gate is the manual demo-mode check, by first confirming the new command names 404 today:
 
 Run: `pnpm dev` (in one terminal), then in another:
+
 ```bash
 curl -s -X POST http://localhost:3000/api/commands/createCatalogItem -H "Content-Type: application/json" -H "Origin: http://localhost:3000" -d '{}'
 ```
+
 Expected: `{"message":"Command unavailable.","referenceId":"..."}` with a 404 status (the command key isn't in the `schemas` map yet).
 
 - [ ] **Step 2: Wire the schemas and branches**
@@ -1076,9 +1084,11 @@ Also extend the rate-limit call's `maximum` so bulk-editing a catalog isn't thro
 - [ ] **Step 3: Run the check to verify it passes**
 
 Run: `pnpm dev`, then:
+
 ```bash
 curl -s -X POST http://localhost:3000/api/commands/createCatalogItem -H "Content-Type: application/json" -H "Origin: http://localhost:3000" -d '{"categoryId":"00000000-0000-0000-0000-000000000201","name":"Test","trackingMode":"pooled_reusable","idempotencyKey":"route-check-0001"}'
 ```
+
 Expected (with `ROFIES_DEMO_MODE=true`, which is already set): `{"status":"committed","referenceId":"...","demo":true}`.
 
 Also run `pnpm typecheck` — expected: no errors.
@@ -1095,12 +1105,14 @@ git commit -m "feat(api): wire catalog item CRUD and stock commands into the com
 ### Task 4: Catalog types, demo fixtures, and staff query helpers
 
 **Files:**
+
 - Modify: `src/lib/catalog/types.ts`
 - Modify: `src/lib/demo-data.ts`
 - Modify: `src/lib/catalog/queries.ts`
 - Create: `tests/unit/catalog-queries.test.ts`
 
 **Interfaces:**
+
 - Consumes: `getServerEnvironment` (`@/lib/env/server`), `createSupabaseServerClient` (`@/lib/supabase/server`), the `api.inventory_list()`/`api.catalog_item_detail(uuid)` RPCs from Task 1.
 - Produces: types `Category`, `StorageLocation`, `InventoryListItem`, `CatalogItemDetail` (from `@/lib/catalog/types`); functions `getCategories()`, `getStorageLocations()`, `getInventoryListItems()`, `getCatalogItemForEdit(id: string)` (from `@/lib/catalog/queries`) — all consumed by Task 5 (form component), Task 6 (row actions), Task 7/8 (pages), Task 9 (inventory list page).
 
@@ -1155,7 +1167,9 @@ describe("catalog admin query loaders", () => {
     const categories = await getCategories();
 
     expect(from).toHaveBeenCalledWith("categories");
-    expect(categories).toEqual([{ id: "00000000-0000-0000-0000-000000000201", name: "Controllers" }]);
+    expect(categories).toEqual([
+      { id: "00000000-0000-0000-0000-000000000201", name: "Controllers" }
+    ]);
   });
 
   it("loads active storage locations with a readable label", async () => {
@@ -1180,7 +1194,10 @@ describe("catalog admin query loaders", () => {
 
     expect(from).toHaveBeenCalledWith("storage_locations");
     expect(locations).toEqual([
-      { id: "00000000-0000-0000-0000-000000000301", label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4" }
+      {
+        id: "00000000-0000-0000-0000-000000000301",
+        label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4"
+      }
     ]);
   });
 
@@ -1206,7 +1223,10 @@ describe("catalog admin query loaders", () => {
 
     expect(schema).toHaveBeenCalledWith("api");
     expect(rpc).toHaveBeenCalledWith("inventory_list");
-    expect(items[0]).toMatchObject({ id: "00000000-0000-0000-0000-000000000101", usableOnHand: 10 });
+    expect(items[0]).toMatchObject({
+      id: "00000000-0000-0000-0000-000000000101",
+      usableOnHand: 10
+    });
   });
 
   it("loads a single catalog item detail via the catalog_item_detail RPC", async () => {
@@ -1317,9 +1337,15 @@ export const demoCategories: readonly Category[] = [
 ];
 
 export const demoStorageLocations: readonly StorageLocation[] = [
-  { id: "00000000-0000-0000-0000-000000000301", label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4" },
+  {
+    id: "00000000-0000-0000-0000-000000000301",
+    label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4"
+  },
   { id: "00000000-0000-0000-0000-000000000302", label: "Robotics Lab / Tool wall / Bay 2" },
-  { id: "00000000-0000-0000-0000-000000000303", label: "Electronics Lab / ESD cabinet / Drawer 3 / C-12" }
+  {
+    id: "00000000-0000-0000-0000-000000000303",
+    label: "Electronics Lab / ESD cabinet / Drawer 3 / C-12"
+  }
 ];
 
 export const demoInventoryListItems: readonly InventoryListItem[] = [
@@ -1343,34 +1369,36 @@ export const demoInventoryListItems: readonly InventoryListItem[] = [
   }
 ];
 
-export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> = Object.fromEntries(
-  demoCatalog.map((item) => [
-    item.id,
-    {
-      id: item.id,
-      categoryId:
-        demoCategories.find((category) => category.name === item.categoryName)?.id ?? demoCategories[0].id,
-      name: item.name,
-      description: item.description,
-      trackingMode: item.trackingMode,
-      publicRemarks: item.publicRemarks,
-      internalRemarks: "",
-      defaultLoanDays: 7,
-      maximumLoanDays: 21,
-      memberQuantityLimit: 3,
-      pickupWindowHours: 24,
-      waitlistEnabled: true,
-      counterIssueEnabled: item.trackingMode === "consumable",
-      lowStockThreshold: 2,
-      acquisitionDate: null,
-      supplier: null,
-      warrantyUntil: null,
-      replacementCost: null,
-      archivedAt: null,
-      tags: item.tags
-    } satisfies CatalogItemDetail
-  ])
-);
+export const demoCatalogItemDetail: Readonly<Record<string, CatalogItemDetail>> =
+  Object.fromEntries(
+    demoCatalog.map((item) => [
+      item.id,
+      {
+        id: item.id,
+        categoryId:
+          demoCategories.find((category) => category.name === item.categoryName)?.id ??
+          demoCategories[0].id,
+        name: item.name,
+        description: item.description,
+        trackingMode: item.trackingMode,
+        publicRemarks: item.publicRemarks,
+        internalRemarks: "",
+        defaultLoanDays: 7,
+        maximumLoanDays: 21,
+        memberQuantityLimit: 3,
+        pickupWindowHours: 24,
+        waitlistEnabled: true,
+        counterIssueEnabled: item.trackingMode === "consumable",
+        lowStockThreshold: 2,
+        acquisitionDate: null,
+        supplier: null,
+        warrantyUntil: null,
+        replacementCost: null,
+        archivedAt: null,
+        tags: item.tags
+      } satisfies CatalogItemDetail
+    ])
+  );
 ```
 
 - [ ] **Step 5: Add the query helpers**
@@ -1429,38 +1457,42 @@ export const getInventoryListItems = cache(async (): Promise<readonly InventoryL
   }));
 });
 
-export const getCatalogItemForEdit = cache(async (id: string): Promise<CatalogItemDetail | null> => {
-  const env = getServerEnvironment();
-  if (env.demoMode || !env.supabaseConfigured) return demoCatalogItemDetail[id] ?? null;
-  const client = await createSupabaseServerClient();
-  if (!client) return null;
-  const { data, error } = await client.schema("api").rpc("catalog_item_detail", { catalog_item_id: id });
-  if (error) throw new Error(`Catalog item detail query failed: ${error.code}`);
-  if (!data) return null;
-  const row = data as Record<string, unknown>;
-  return {
-    id: row.id as string,
-    categoryId: row.category_id as string,
-    name: row.name as string,
-    description: row.description as string,
-    trackingMode: row.tracking_mode as CatalogItemDetail["trackingMode"],
-    publicRemarks: row.public_remarks as string,
-    internalRemarks: row.internal_remarks as string,
-    defaultLoanDays: (row.default_loan_days as number | null) ?? null,
-    maximumLoanDays: (row.maximum_loan_days as number | null) ?? null,
-    memberQuantityLimit: (row.member_quantity_limit as number | null) ?? null,
-    pickupWindowHours: (row.pickup_window_hours as number | null) ?? null,
-    waitlistEnabled: row.waitlist_enabled as boolean,
-    counterIssueEnabled: row.counter_issue_enabled as boolean,
-    lowStockThreshold: (row.low_stock_threshold as number | null) ?? null,
-    acquisitionDate: (row.acquisition_date as string | null) ?? null,
-    supplier: (row.supplier as string | null) ?? null,
-    warrantyUntil: (row.warranty_until as string | null) ?? null,
-    replacementCost: (row.replacement_cost as number | null) ?? null,
-    archivedAt: (row.archived_at as string | null) ?? null,
-    tags: Array.isArray(row.tags) ? row.tags.map(String) : []
-  };
-});
+export const getCatalogItemForEdit = cache(
+  async (id: string): Promise<CatalogItemDetail | null> => {
+    const env = getServerEnvironment();
+    if (env.demoMode || !env.supabaseConfigured) return demoCatalogItemDetail[id] ?? null;
+    const client = await createSupabaseServerClient();
+    if (!client) return null;
+    const { data, error } = await client
+      .schema("api")
+      .rpc("catalog_item_detail", { catalog_item_id: id });
+    if (error) throw new Error(`Catalog item detail query failed: ${error.code}`);
+    if (!data) return null;
+    const row = data as Record<string, unknown>;
+    return {
+      id: row.id as string,
+      categoryId: row.category_id as string,
+      name: row.name as string,
+      description: row.description as string,
+      trackingMode: row.tracking_mode as CatalogItemDetail["trackingMode"],
+      publicRemarks: row.public_remarks as string,
+      internalRemarks: row.internal_remarks as string,
+      defaultLoanDays: (row.default_loan_days as number | null) ?? null,
+      maximumLoanDays: (row.maximum_loan_days as number | null) ?? null,
+      memberQuantityLimit: (row.member_quantity_limit as number | null) ?? null,
+      pickupWindowHours: (row.pickup_window_hours as number | null) ?? null,
+      waitlistEnabled: row.waitlist_enabled as boolean,
+      counterIssueEnabled: row.counter_issue_enabled as boolean,
+      lowStockThreshold: (row.low_stock_threshold as number | null) ?? null,
+      acquisitionDate: (row.acquisition_date as string | null) ?? null,
+      supplier: (row.supplier as string | null) ?? null,
+      warrantyUntil: (row.warranty_until as string | null) ?? null,
+      replacementCost: (row.replacement_cost as number | null) ?? null,
+      archivedAt: (row.archived_at as string | null) ?? null,
+      tags: Array.isArray(row.tags) ? row.tags.map(String) : []
+    };
+  }
+);
 ```
 
 - [ ] **Step 6: Run test to verify it passes**
@@ -1480,9 +1512,11 @@ git commit -m "feat(catalog): add staff query helpers and demo fixtures for cate
 ### Task 5: `CatalogItemForm` client component
 
 **Files:**
+
 - Create: `src/components/inventory/catalog-item-form.tsx`
 
 **Interfaces:**
+
 - Consumes: `Category`, `StorageLocation`, `CatalogItemDetail` types (Task 4); `POST /api/commands/createCatalogItem` and `.../updateCatalogItem` (Task 3).
 - Produces: `CatalogItemForm({ mode, categories, storageLocations, item? })` — consumed by Task 7 and Task 8.
 
@@ -1523,7 +1557,9 @@ export function CatalogItemForm({
   item?: CatalogItemDetail;
 }) {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ state: "success" | "error"; message: string } | null>(null);
+  const [result, setResult] = useState<{ state: "success" | "error"; message: string } | null>(
+    null
+  );
   const [trackingMode, setTrackingMode] = useState<CatalogItemDetail["trackingMode"]>(
     item?.trackingMode ?? "pooled_reusable"
   );
@@ -1612,11 +1648,16 @@ export function CatalogItemForm({
               }
             : {
                 state: "error",
-                message: body.message ?? `Operation failed. Reference ${body.referenceId ?? "unavailable"}.`
+                message:
+                  body.message ??
+                  `Operation failed. Reference ${body.referenceId ?? "unavailable"}.`
               }
         );
       } catch {
-        setResult({ state: "error", message: "Network unavailable. The operation was not confirmed; retry." });
+        setResult({
+          state: "error",
+          message: "Network unavailable. The operation was not confirmed; retry."
+        });
       }
     });
   }
@@ -1642,11 +1683,23 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label htmlFor="name">Name</label>
-        <input id="name" name="name" minLength={2} maxLength={160} defaultValue={item?.name} required />
+        <input
+          id="name"
+          name="name"
+          minLength={2}
+          maxLength={160}
+          defaultValue={item?.name}
+          required
+        />
       </div>
       <div className="form-field">
         <label htmlFor="description">Description</label>
-        <textarea id="description" name="description" maxLength={4000} defaultValue={item?.description} />
+        <textarea
+          id="description"
+          name="description"
+          maxLength={4000}
+          defaultValue={item?.description}
+        />
       </div>
       {mode === "create" ? (
         <fieldset className="decision-line">
@@ -1672,11 +1725,21 @@ export function CatalogItemForm({
       )}
       <div className="form-field">
         <label htmlFor="publicRemarks">Public remarks</label>
-        <textarea id="publicRemarks" name="publicRemarks" maxLength={2000} defaultValue={item?.publicRemarks} />
+        <textarea
+          id="publicRemarks"
+          name="publicRemarks"
+          maxLength={2000}
+          defaultValue={item?.publicRemarks}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="internalRemarks">Internal remarks (staff only)</label>
-        <textarea id="internalRemarks" name="internalRemarks" maxLength={4000} defaultValue={item?.internalRemarks} />
+        <textarea
+          id="internalRemarks"
+          name="internalRemarks"
+          maxLength={4000}
+          defaultValue={item?.internalRemarks}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="defaultLoanDays">Default loan days</label>
@@ -1733,19 +1796,32 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label>
-          <input type="checkbox" name="waitlistEnabled" defaultChecked={item?.waitlistEnabled ?? true} />
+          <input
+            type="checkbox"
+            name="waitlistEnabled"
+            defaultChecked={item?.waitlistEnabled ?? true}
+          />
           Allow waitlisting
         </label>
       </div>
       <div className="form-field">
         <label>
-          <input type="checkbox" name="counterIssueEnabled" defaultChecked={item?.counterIssueEnabled ?? false} />
+          <input
+            type="checkbox"
+            name="counterIssueEnabled"
+            defaultChecked={item?.counterIssueEnabled ?? false}
+          />
           Allow counter issue (consumables only)
         </label>
       </div>
       <div className="form-field">
         <label htmlFor="acquisitionDate">Acquisition date</label>
-        <input id="acquisitionDate" name="acquisitionDate" type="date" defaultValue={item?.acquisitionDate ?? ""} />
+        <input
+          id="acquisitionDate"
+          name="acquisitionDate"
+          type="date"
+          defaultValue={item?.acquisitionDate ?? ""}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="supplier">Supplier</label>
@@ -1753,7 +1829,12 @@ export function CatalogItemForm({
       </div>
       <div className="form-field">
         <label htmlFor="warrantyUntil">Warranty until</label>
-        <input id="warrantyUntil" name="warrantyUntil" type="date" defaultValue={item?.warrantyUntil ?? ""} />
+        <input
+          id="warrantyUntil"
+          name="warrantyUntil"
+          type="date"
+          defaultValue={item?.warrantyUntil ?? ""}
+        />
       </div>
       <div className="form-field">
         <label htmlFor="replacementCost">Replacement cost</label>
@@ -1772,7 +1853,9 @@ export function CatalogItemForm({
       </div>
       {mode === "create" ? (
         <fieldset className="decision-line">
-          <legend>{trackingMode === "individual_asset" ? "Units (optional)" : "Opening stock (optional)"}</legend>
+          <legend>
+            {trackingMode === "individual_asset" ? "Units (optional)" : "Opening stock (optional)"}
+          </legend>
           <div className="form-field">
             <label htmlFor="openingStorageLocationId">Storage location</label>
             <select id="openingStorageLocationId" name="openingStorageLocationId" defaultValue="">
@@ -1797,7 +1880,11 @@ export function CatalogItemForm({
           {trackingMode === "individual_asset" ? (
             <div className="form-field">
               <label htmlFor="assetIdentifiers">Unit identifiers, one per line</label>
-              <textarea id="assetIdentifiers" name="assetIdentifiers" placeholder={"RN-JET-01\nRN-JET-02"} />
+              <textarea
+                id="assetIdentifiers"
+                name="assetIdentifiers"
+                placeholder={"RN-JET-01\nRN-JET-02"}
+              />
             </div>
           ) : (
             <div className="form-field">
@@ -1814,7 +1901,11 @@ export function CatalogItemForm({
         </div>
       ) : null}
       <button className="button button-primary" type="submit" disabled={pending}>
-        {pending ? <LoaderCircle className="spin" size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
+        {pending ? (
+          <LoaderCircle className="spin" size={18} aria-hidden="true" />
+        ) : (
+          <CheckCircle2 size={18} aria-hidden="true" />
+        )}
         {pending ? "Committing…" : mode === "create" ? "Create item" : "Save changes"}
       </button>
       {result ? (
@@ -1844,10 +1935,12 @@ git commit -m "feat(inventory): add the catalog item create/edit form component"
 ### Task 6: `InventoryRowActions` client component + CSS
 
 **Files:**
+
 - Create: `src/components/inventory/inventory-row-actions.tsx`
 - Modify: `src/app/globals.css`
 
 **Interfaces:**
+
 - Consumes: `StorageLocation` type (Task 4); `POST /api/commands/archiveCatalogItem`, `.../restoreCatalogItem`, `.../deleteCatalogItem`, `.../adjustStock`, `.../addIndividualAsset` (Task 3).
 - Produces: `InventoryRowActions({ catalogItemId, archivedAt, trackingMode, storageLocations })` — consumed by Task 9.
 
@@ -1896,7 +1989,9 @@ async function runCommand(command: string, payload: Record<string, unknown>) {
   const body = (await response.json()) as { message?: string; referenceId?: string };
   return {
     ok: response.ok,
-    message: response.ok ? "Committed." : (body.message ?? `Failed. Reference ${body.referenceId ?? "unavailable"}.`)
+    message: response.ok
+      ? "Committed."
+      : (body.message ?? `Failed. Reference ${body.referenceId ?? "unavailable"}.`)
   };
 }
 
@@ -1983,11 +2078,19 @@ export function InventoryRowActions({
           <Trash2 size={16} aria-hidden="true" /> Delete
         </button>
         {trackingMode !== "individual_asset" ? (
-          <button type="button" className="button button-secondary" onClick={() => setShowAdjust((value) => !value)}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowAdjust((value) => !value)}
+          >
             Adjust stock
           </button>
         ) : (
-          <button type="button" className="button button-secondary" onClick={() => setShowAddUnit((value) => !value)}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => setShowAddUnit((value) => !value)}
+          >
             Add unit
           </button>
         )}
@@ -2000,7 +2103,11 @@ export function InventoryRowActions({
           </div>
           <div className="form-field">
             <label htmlFor={`unitStorageLocationId-${catalogItemId}`}>Storage location</label>
-            <select id={`unitStorageLocationId-${catalogItemId}`} name="storageLocationId" defaultValue="">
+            <select
+              id={`unitStorageLocationId-${catalogItemId}`}
+              name="storageLocationId"
+              defaultValue=""
+            >
               <option value="">Unassigned</option>
               {storageLocations.map((location) => (
                 <option key={location.id} value={location.id}>
@@ -2021,10 +2128,20 @@ export function InventoryRowActions({
           </div>
           <div className="form-field">
             <label htmlFor={`unitReason-${catalogItemId}`}>Reason</label>
-            <textarea id={`unitReason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+            <textarea
+              id={`unitReason-${catalogItemId}`}
+              name="reason"
+              minLength={3}
+              maxLength={1000}
+              required
+            />
           </div>
           <button className="button button-primary" type="submit" disabled={pending}>
-            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm new unit"}
+            {pending ? (
+              <LoaderCircle className="spin" size={16} aria-hidden="true" />
+            ) : (
+              "Confirm new unit"
+            )}
           </button>
         </form>
       ) : null}
@@ -2032,7 +2149,11 @@ export function InventoryRowActions({
         <form className="command-card" action={submitAdjustment}>
           <div className="form-field">
             <label htmlFor={`storageLocationId-${catalogItemId}`}>Storage location</label>
-            <select id={`storageLocationId-${catalogItemId}`} name="storageLocationId" defaultValue="">
+            <select
+              id={`storageLocationId-${catalogItemId}`}
+              name="storageLocationId"
+              defaultValue=""
+            >
               <option value="">Unassigned</option>
               {storageLocations.map((location) => (
                 <option key={location.id} value={location.id}>
@@ -2055,19 +2176,38 @@ export function InventoryRowActions({
             <label htmlFor={`quantityDelta-${catalogItemId}`}>
               Quantity change (use a negative number to remove stock)
             </label>
-            <input id={`quantityDelta-${catalogItemId}`} name="quantityDelta" type="number" required />
+            <input
+              id={`quantityDelta-${catalogItemId}`}
+              name="quantityDelta"
+              type="number"
+              required
+            />
           </div>
           <div className="form-field">
             <label htmlFor={`reason-${catalogItemId}`}>Reason</label>
-            <textarea id={`reason-${catalogItemId}`} name="reason" minLength={3} maxLength={1000} required />
+            <textarea
+              id={`reason-${catalogItemId}`}
+              name="reason"
+              minLength={3}
+              maxLength={1000}
+              required
+            />
           </div>
           <button className="button button-primary" type="submit" disabled={pending}>
-            {pending ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : "Confirm adjustment"}
+            {pending ? (
+              <LoaderCircle className="spin" size={16} aria-hidden="true" />
+            ) : (
+              "Confirm adjustment"
+            )}
           </button>
         </form>
       ) : null}
       {message ? (
-        <p className="command-result" data-state={message.startsWith("Committed") ? "success" : "error"} role="status">
+        <p
+          className="command-result"
+          data-state={message.startsWith("Committed") ? "success" : "error"}
+          role="status"
+        >
           {message}
         </p>
       ) : null}
@@ -2093,9 +2233,11 @@ git commit -m "feat(inventory): add per-row archive/restore/delete/adjust-stock 
 ### Task 7: Create-item page
 
 **Files:**
+
 - Create: `src/app/admin/inventory/new/page.tsx`
 
 **Interfaces:**
+
 - Consumes: `requireAnyCapability` (`@/lib/auth/require-capability`), `getCategories`/`getStorageLocations` (Task 4), `CatalogItemForm` (Task 5).
 - Produces: route `/admin/inventory/new` — linked from Task 9.
 
@@ -2111,7 +2253,10 @@ import { getCategories, getStorageLocations } from "@/lib/catalog/queries";
 
 export default async function NewInventoryItemPage() {
   await requireAnyCapability(["inventory:manage"]);
-  const [categories, storageLocations] = await Promise.all([getCategories(), getStorageLocations()]);
+  const [categories, storageLocations] = await Promise.all([
+    getCategories(),
+    getStorageLocations()
+  ]);
   return (
     <AppShell mode="staff">
       <div className="page-head">
@@ -2147,9 +2292,11 @@ git commit -m "feat(inventory): add the create catalog item page"
 ### Task 8: Edit-item page
 
 **Files:**
+
 - Create: `src/app/admin/inventory/[id]/edit/page.tsx`
 
 **Interfaces:**
+
 - Consumes: `requireAnyCapability`, `getCategories`/`getStorageLocations`/`getCatalogItemForEdit` (Task 4), `CatalogItemForm` (Task 5).
 - Produces: route `/admin/inventory/[id]/edit` — linked from Task 9.
 
@@ -2164,7 +2311,11 @@ import { CatalogItemForm } from "@/components/inventory/catalog-item-form";
 import { requireAnyCapability } from "@/lib/auth/require-capability";
 import { getCategories, getCatalogItemForEdit, getStorageLocations } from "@/lib/catalog/queries";
 
-export default async function EditInventoryItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditInventoryItemPage({
+  params
+}: {
+  params: Promise<{ id: string }>;
+}) {
   await requireAnyCapability(["inventory:manage"]);
   const { id } = await params;
   const [categories, storageLocations, item] = await Promise.all([
@@ -2182,7 +2333,12 @@ export default async function EditInventoryItemPage({ params }: { params: Promis
           <p>Tracking mode is fixed at creation and cannot be changed here.</p>
         </div>
       </div>
-      <CatalogItemForm mode="edit" categories={categories} storageLocations={storageLocations} item={item} />
+      <CatalogItemForm
+        mode="edit"
+        categories={categories}
+        storageLocations={storageLocations}
+        item={item}
+      />
     </AppShell>
   );
 }
@@ -2208,9 +2364,11 @@ git commit -m "feat(inventory): add the edit catalog item page"
 ### Task 9: Update the Inventory list page
 
 **Files:**
+
 - Modify: `src/app/admin/inventory/page.tsx`
 
 **Interfaces:**
+
 - Consumes: `getInventoryListItems`, `getStorageLocations` (Task 4), `InventoryRowActions` (Task 6).
 - Produces: the updated `/admin/inventory` page.
 
@@ -2230,7 +2388,10 @@ import { getInventoryListItems, getStorageLocations } from "@/lib/catalog/querie
 
 export default async function InventoryPage() {
   await requireAnyCapability(["inventory:manage"]);
-  const [items, storageLocations] = await Promise.all([getInventoryListItems(), getStorageLocations()]);
+  const [items, storageLocations] = await Promise.all([
+    getInventoryListItems(),
+    getStorageLocations()
+  ]);
   return (
     <AppShell mode="staff">
       <div className="page-head">
@@ -2293,7 +2454,10 @@ export default async function InventoryPage() {
                     )}
                   </td>
                   <td data-label="Actions">
-                    <Link href={`/admin/inventory/${item.id}/edit`} className="button button-secondary">
+                    <Link
+                      href={`/admin/inventory/${item.id}/edit`}
+                      className="button button-secondary"
+                    >
                       Edit
                     </Link>
                     <InventoryRowActions

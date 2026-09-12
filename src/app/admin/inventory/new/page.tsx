@@ -5,7 +5,10 @@ import { getCategories, getStorageLocations } from "@/lib/catalog/queries";
 
 export default async function NewInventoryItemPage() {
   await requireAnyCapability(["inventory:manage"]);
-  const [categories, storageLocations] = await Promise.all([getCategories(), getStorageLocations()]);
+  const [categories, storageLocations] = await Promise.all([
+    getCategories(),
+    getStorageLocations()
+  ]);
   return (
     <AppShell mode="staff">
       <div className="page-head">

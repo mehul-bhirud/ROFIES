@@ -44,7 +44,9 @@ describe("catalog admin query loaders", () => {
     const categories = await getCategories();
 
     expect(from).toHaveBeenCalledWith("categories");
-    expect(categories).toEqual([{ id: "00000000-0000-0000-0000-000000000201", name: "Controllers" }]);
+    expect(categories).toEqual([
+      { id: "00000000-0000-0000-0000-000000000201", name: "Controllers" }
+    ]);
   });
 
   it("loads active storage locations with a readable label", async () => {
@@ -69,7 +71,10 @@ describe("catalog admin query loaders", () => {
 
     expect(from).toHaveBeenCalledWith("storage_locations");
     expect(locations).toEqual([
-      { id: "00000000-0000-0000-0000-000000000301", label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4" }
+      {
+        id: "00000000-0000-0000-0000-000000000301",
+        label: "Robotics Lab / Blue cabinet / Shelf B / Bin 4"
+      }
     ]);
   });
 
@@ -95,7 +100,10 @@ describe("catalog admin query loaders", () => {
 
     expect(schema).toHaveBeenCalledWith("api");
     expect(rpc).toHaveBeenCalledWith("inventory_list");
-    expect(items[0]).toMatchObject({ id: "00000000-0000-0000-0000-000000000101", usableOnHand: 10 });
+    expect(items[0]).toMatchObject({
+      id: "00000000-0000-0000-0000-000000000101",
+      usableOnHand: 10
+    });
   });
 
   it("loads a single catalog item detail via the catalog_item_detail RPC", async () => {

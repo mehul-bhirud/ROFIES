@@ -2,8 +2,20 @@ import "server-only";
 import { cache } from "react";
 import { getServerEnvironment } from "@/lib/env/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { demoCatalog, demoCategories, demoStorageLocations, demoInventoryListItems, demoCatalogItemDetail } from "@/lib/demo-data";
-import type { CatalogItemView, Category, StorageLocation, InventoryListItem, CatalogItemDetail } from "@/lib/catalog/types";
+import {
+  demoCatalog,
+  demoCategories,
+  demoStorageLocations,
+  demoInventoryListItems,
+  demoCatalogItemDetail
+} from "@/lib/demo-data";
+import type {
+  CatalogItemView,
+  Category,
+  StorageLocation,
+  InventoryListItem,
+  CatalogItemDetail
+} from "@/lib/catalog/types";
 
 const seededPhotos: Readonly<Record<string, NonNullable<CatalogItemView["photo"]>>> = {
   "00000000-0000-0000-0000-000000000101": {
@@ -144,35 +156,39 @@ export const getInventoryListItems = cache(async (): Promise<readonly InventoryL
   }));
 });
 
-export const getCatalogItemForEdit = cache(async (id: string): Promise<CatalogItemDetail | null> => {
-  const env = getServerEnvironment();
-  if (env.demoMode || !env.supabaseConfigured) return demoCatalogItemDetail[id] ?? null;
-  const client = await createSupabaseServerClient();
-  if (!client) return null;
-  const { data, error } = await client.schema("api").rpc("catalog_item_detail", { catalog_item_id: id });
-  if (error) throw new Error(`Catalog item detail query failed: ${error.code}`);
-  if (!data) return null;
-  const row = data as Record<string, unknown>;
-  return {
-    id: row.id as string,
-    categoryId: row.category_id as string,
-    name: row.name as string,
-    description: row.description as string,
-    trackingMode: row.tracking_mode as CatalogItemDetail["trackingMode"],
-    publicRemarks: row.public_remarks as string,
-    internalRemarks: row.internal_remarks as string,
-    defaultLoanDays: (row.default_loan_days as number | null) ?? null,
-    maximumLoanDays: (row.maximum_loan_days as number | null) ?? null,
-    memberQuantityLimit: (row.member_quantity_limit as number | null) ?? null,
-    pickupWindowHours: (row.pickup_window_hours as number | null) ?? null,
-    waitlistEnabled: row.waitlist_enabled as boolean,
-    counterIssueEnabled: row.counter_issue_enabled as boolean,
-    lowStockThreshold: (row.low_stock_threshold as number | null) ?? null,
-    acquisitionDate: (row.acquisition_date as string | null) ?? null,
-    supplier: (row.supplier as string | null) ?? null,
-    warrantyUntil: (row.warranty_until as string | null) ?? null,
-    replacementCost: (row.replacement_cost as number | null) ?? null,
-    archivedAt: (row.archived_at as string | null) ?? null,
-    tags: Array.isArray(row.tags) ? row.tags.map(String) : []
-  };
-});
+export const getCatalogItemForEdit = cache(
+  async (id: string): Promise<CatalogItemDetail | null> => {
+    const env = getServerEnvironment();
+    if (env.demoMode || !env.supabaseConfigured) return demoCatalogItemDetail[id] ?? null;
+    const client = await createSupabaseServerClient();
+    if (!client) return null;
+    const { data, error } = await client
+      .schema("api")
+      .rpc("catalog_item_detail", { catalog_item_id: id });
+    if (error) throw new Error(`Catalog item detail query failed: ${error.code}`);
+    if (!data) return null;
+    const row = data as Record<string, unknown>;
+    return {
+      id: row.id as string,
+      categoryId: row.category_id as string,
+      name: row.name as string,
+      description: row.description as string,
+      trackingMode: row.tracking_mode as CatalogItemDetail["trackingMode"],
+      publicRemarks: row.public_remarks as string,
+      internalRemarks: row.internal_remarks as string,
+      defaultLoanDays: (row.default_loan_days as number | null) ?? null,
+      maximumLoanDays: (row.maximum_loan_days as number | null) ?? null,
+      memberQuantityLimit: (row.member_quantity_limit as number | null) ?? null,
+      pickupWindowHours: (row.pickup_window_hours as number | null) ?? null,
+      waitlistEnabled: row.waitlist_enabled as boolean,
+      counterIssueEnabled: row.counter_issue_enabled as boolean,
+      lowStockThreshold: (row.low_stock_threshold as number | null) ?? null,
+      acquisitionDate: (row.acquisition_date as string | null) ?? null,
+      supplier: (row.supplier as string | null) ?? null,
+      warrantyUntil: (row.warranty_until as string | null) ?? null,
+      replacementCost: (row.replacement_cost as number | null) ?? null,
+      archivedAt: (row.archived_at as string | null) ?? null,
+      tags: Array.isArray(row.tags) ? row.tags.map(String) : []
+    };
+  }
+);
