@@ -1489,6 +1489,50 @@ fieldset legend {
   color: var(--danger);
 }
 
+.approval-dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(640px, calc(100vw - 32px));
+  width: 100%;
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+}
+.approval-dialog::backdrop {
+  background: rgba(6, 20, 23, 0.6);
+  backdrop-filter: blur(2px);
+}
+.approval-dialog .command-card {
+  box-shadow: var(--shadow-dialog);
+}
+.approval-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.approval-dialog-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+.approval-dialog-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.approval-dialog-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+}
+.approval-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .inventory-row-actions {
   display: flex;
   flex-direction: column;
