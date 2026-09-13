@@ -47,7 +47,7 @@ function OnboardingSurface({
               <Check size={17} aria-hidden="true" />
               <span>
                 <strong>Institution email</strong>
-                <small>Ownership confirmed</small>
+                <small>Domain verified</small>
               </span>
             </li>
             <li className="current">

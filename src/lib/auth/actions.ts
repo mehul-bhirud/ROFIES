@@ -22,8 +22,7 @@ export type AuthActionState = {
 };
 
 const initialState: AuthActionState = { ok: false, message: "" };
-const genericSignupMessage =
-  "If this address can be registered, check your inbox for a confirmation link.";
+const genericSignupMessage = "If this address can be registered, you can now sign in to continue.";
 const unavailableMessage = "Authentication is temporarily unavailable. Try again.";
 
 function actionFormData(first: AuthActionState | FormData, second?: FormData) {
@@ -47,10 +46,6 @@ function invalidResult(error: {
     message: "Check the highlighted fields.",
     fieldErrors
   } satisfies AuthActionState;
-}
-
-function confirmationUrl(origin: string) {
-  return new URL("/auth/confirm", origin).toString();
 }
 
 async function clearLocalSession(client: {
@@ -79,13 +74,13 @@ export async function signUpAction(
   if (!parsed.success) return invalidResult(parsed.error);
 
   if (env.demoMode) return { ok: true, message: genericSignupMessage };
-  const client = await createSupabaseServerClient();
-  if (!client) return { ok: false, message: unavailableMessage };
+  const service = createSupabaseServiceClient();
+  if (!service) return { ok: false, message: unavailableMessage };
   try {
-    await client.auth.signUp({
+    await service.auth.admin.createUser({
       email: parsed.data.email,
       password: parsed.data.password,
-      options: { emailRedirectTo: confirmationUrl(env.ROFIES_APP_ORIGIN) }
+      email_confirm: true
     });
   } catch {
     // Deliberately return the same acknowledgement for provider and account states.

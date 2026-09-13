@@ -30,7 +30,7 @@ const copy = {
   "sign-up": {
     eyebrow: "Student registration",
     title: "Start with your institution identity.",
-    description: "We’ll email a confirmation link before profile and college-ID review.",
+    description: "Create a password, then complete your profile and college-ID upload.",
     submit: "Create account"
   },
   "forgot-password": {
@@ -55,7 +55,7 @@ function actionFor(mode: AuthMode): AuthAction {
 }
 
 function destinationFor(mode: AuthMode) {
-  if (mode === "sign-up") return "/auth/check-email?intent=signup";
+  if (mode === "sign-up") return "/auth/sign-in";
   if (mode === "forgot-password") return "/auth/check-email?intent=recovery";
   if (mode === "update-password") return "/auth/sign-in?password=updated";
   return "/";

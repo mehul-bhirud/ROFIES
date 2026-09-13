@@ -44,15 +44,15 @@
 | A04 Cryptographic Failures                 | TLS; provider-managed encryption; secure cookies; no custom cryptography; secrets in protected configuration; avoid sensitive data in URLs/logs.                                              |
 | A05 Injection                              | Parameterized SQL; validated structured input; plain-text/sanitized output; safe filenames; CSV formula neutralization; no shell construction from user data.                                 |
 | A06 Insecure Design                        | Threat modeling; state machines; transaction-time invariants; abuse cases; least privilege; privacy review; explicit outage behavior.                                                         |
-| A07 Authentication Failures                | Supabase email/password; confirmed institutional email; strong/leaked-password controls; generic responses; rate limits; secure sessions; safe recovery; recent authentication; deactivation. |
+| A07 Authentication Failures                | Supabase email/password; domain-restricted institutional email verified by admin ID review; strong/leaked-password controls; generic responses; rate limits; secure sessions; safe recovery; recent authentication; deactivation. |
 | A08 Software or Data Integrity Failures    | Immutable audit/business events; migration review; idempotency; signed/provider-verified callbacks where applicable; trusted deployment pipeline.                                             |
 | A09 Security Logging and Alerting Failures | Structured authz/security events; redaction; alerts for repeated denial, role changes, secret/config failures, and integrity violations.                                                      |
 | A10 Mishandling of Exceptional Conditions  | Atomic writes; bounded retries; timeouts; global error handling; fail-closed authorization; no false success; tested outage reconciliation.                                                   |
 
 ## Authentication and session requirements
 
-- Accept only configured institutional email domains and validate the normalized confirmed email server-side during onboarding and protected actions.
-- Use Supabase password hashing, strong-password settings, leaked-password protection where available, email confirmation, and PKCE-compatible SSR flows.
+- Accept only configured institutional email domains and validate the normalized email domain server-side during onboarding and protected actions.
+- Use Supabase password hashing, strong-password settings, leaked-password protection where available, and PKCE-compatible SSR flows. Accounts are created pre-confirmed (no confirmation email); identity is verified by mandatory admin review of the uploaded college-ID image, not by confirming email ownership.
 - Use generic signup, login, and recovery responses that do not disclose whether an account exists.
 - Rate-limit signup, login, confirmation resend, recovery, and password changes by safe combinations of IP, account, and server-side context.
 - Send only authentication confirmation and security messages through institution SMTP when enabled; never place application data in those messages.
@@ -116,7 +116,7 @@
 
 ## Privacy and retention
 
-- Collect one college-ID image only for membership verification, after confirmed institutional-email ownership and explicit submission.
+- Collect one college-ID image only for membership verification, after institutional-email domain validation and explicit submission.
 - Retain the private image while review is active and for 30 days after approval or rejection, then delete it automatically. Preserve only non-image decision metadata and audit events.
 - Exclude college-ID images and contents from logs, traces, notifications, exports, analytics, demo data, and long-lived application backups. Provider backup retention must be documented and bounded.
 - Phone is optional, used only as restricted contact information, and not used for messaging in the initial release.

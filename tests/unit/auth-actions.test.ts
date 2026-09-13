@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   resetPasswordForEmail: vi.fn(),
   updateUser: vi.fn(),
   signOut: vi.fn(),
+  createUser: vi.fn(),
   serviceRpc: vi.fn(),
   serviceSchema: vi.fn(),
   createSupabaseServerClient: vi.fn(),
@@ -57,9 +58,16 @@ describe("password authentication server actions", () => {
         signOut: mocks.signOut
       }
     });
-    mocks.createSupabaseServiceClient.mockReturnValue({ from: vi.fn() });
+    mocks.createSupabaseServiceClient.mockReturnValue({
+      from: vi.fn(),
+      auth: { admin: { createUser: mocks.createUser } }
+    });
     mocks.provisionConfirmedApplicant.mockResolvedValue(true);
     mocks.signUp.mockResolvedValue({ data: { user: null, session: null }, error: null });
+    mocks.createUser.mockResolvedValue({
+      data: { user: { id: "user-1", email: "student@iiitp.ac.in" } },
+      error: null
+    });
     mocks.signInWithPassword.mockResolvedValue({
       data: {
         user: {
@@ -77,29 +85,33 @@ describe("password authentication server actions", () => {
     mocks.serviceSchema.mockReturnValue({ rpc: mocks.serviceRpc });
   });
 
-  it("normalizes signup input and constructs confirmation redirects from the configured origin", async () => {
+  it("creates a pre-confirmed account without sending a confirmation email", async () => {
     const result = await signUpAction(
       formData({ email: " STUDENT@IIITP.AC.IN ", password: "Correct-Horse-42" })
     );
 
     expect(result.ok).toBe(true);
-    expect(mocks.signUp).toHaveBeenCalledWith({
+    expect(mocks.createUser).toHaveBeenCalledWith({
       email: "student@iiitp.ac.in",
       password: "Correct-Horse-42",
-      options: { emailRedirectTo: "https://equipment.iiitp.ac.in/auth/confirm" }
+      email_confirm: true
     });
+    expect(mocks.signUp).not.toHaveBeenCalled();
   });
 
   it("returns the same signup acknowledgement when the provider rejects an existing account", async () => {
-    mocks.signUp.mockResolvedValueOnce({
-      data: { user: null, session: null },
+    mocks.createUser.mockResolvedValueOnce({
+      data: { user: null },
       error: new Error("exists")
     });
 
     const existing = await signUpAction(
       formData({ email: "student@iiitp.ac.in", password: "Correct-Horse-42" })
     );
-    mocks.signUp.mockResolvedValueOnce({ data: { user: null, session: null }, error: null });
+    mocks.createUser.mockResolvedValueOnce({
+      data: { user: { id: "user-1", email: "student@iiitp.ac.in" } },
+      error: null
+    });
     const newAccount = await signUpAction(
       formData({ email: "student@iiitp.ac.in", password: "Correct-Horse-42" })
     );
@@ -114,7 +126,21 @@ describe("password authentication server actions", () => {
 
     expect(result.ok).toBe(false);
     expect(result.fieldErrors?.email).toBeDefined();
-    expect(mocks.signUp).not.toHaveBeenCalled();
+    expect(mocks.createUser).not.toHaveBeenCalled();
+  });
+
+  it("reports the service unavailable when the service-role client cannot be created", async () => {
+    mocks.createSupabaseServiceClient.mockReturnValueOnce(null);
+
+    const result = await signUpAction(
+      formData({ email: "student@iiitp.ac.in", password: "Correct-Horse-42" })
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      message: "Authentication is temporarily unavailable. Try again."
+    });
+    expect(mocks.createUser).not.toHaveBeenCalled();
   });
 
   it("uses a non-disclosing sign-in failure", async () => {

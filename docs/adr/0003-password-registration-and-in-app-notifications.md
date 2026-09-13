@@ -1,6 +1,6 @@
 # ADR 0003: Password Registration, College-ID Verification, and In-App Notifications
 
-**Status:** Accepted  
+**Status:** Partially superseded by [ADR 0004](0004-skip-email-confirmation-for-registration.md) (email confirmation before onboarding)  
 **Date:** 2026-08-08
 
 ## Context

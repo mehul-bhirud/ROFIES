@@ -6,7 +6,7 @@ Define the vocabulary and invariants used by product requirements, code, databas
 
 ## People and access
 
-- **Student applicant:** a user with a confirmed institutional email/password account whose profile and college-ID verification is incomplete, pending, changes-requested, or rejected.
+- **Student applicant:** a user with a domain-restricted institutional email/password account whose profile and college-ID verification is incomplete, pending, changes-requested, or rejected.
 - **Member:** a student whose club membership is active and approved.
 - **Borrower of record:** the single member accountable for a request and resulting loan, even when a team uses the equipment.
 - **Inventory manager:** staff permission for catalog, stock, handover, return, repair, and reconciliation actions.
@@ -14,7 +14,7 @@ Define the vocabulary and invariants used by product requirements, code, databas
 - **Administrator:** staff permission for membership, role, policy, contact, audit, and system administration.
 - **Staff:** any user holding at least one privileged permission. Staff permissions are composable.
 
-Email/password authentication and email confirmation establish account control. Admin review of the college ID establishes student identity and simultaneously activates membership. Staff permissions answer which privileged operations a member may perform.
+Domain-restricted email/password authentication establishes account control. Admin review of the college ID establishes student identity and simultaneously activates membership. Staff permissions answer which privileged operations a member may perform.
 
 ## Registration concepts
 
@@ -90,7 +90,7 @@ Suspended and former members cannot create new requests. Historical records rema
 
 ### Member application
 
-`awaiting_email_confirmation → incomplete → pending_review → approved | changes_requested | rejected`
+`incomplete → pending_review → approved | changes_requested | rejected`
 
 `changes_requested` returns to `incomplete` when the applicant replaces or corrects the submission. Approval atomically moves membership to `active`. Approval and rejection are final decisions for the submitted document and start its 30-day deletion clock.
 
@@ -111,7 +111,7 @@ Suspended and former members cannot create new requests. Historical records rema
 13. Historical business events are append-only.
 14. Every privileged override, correction, write-off, permission change, handover, and return has an actor, timestamp, and audit event.
 15. Students can access their own borrowing records but not another borrower's identity.
-16. Only a confirmed institutional email account may submit a member application.
+16. Only a domain-restricted institutional email account may submit a member application.
 17. Only an approved application may activate membership, and approval records the deciding administrator atomically.
 18. College-ID bytes are never stored in PostgreSQL, logs, exports, notifications, or audit payloads.
 19. A final application decision schedules the private ID object for deletion after 30 days while preserving non-image audit history.

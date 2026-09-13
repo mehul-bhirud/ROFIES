@@ -21,7 +21,7 @@ When documents conflict, stop and resolve the conflict in the documents before i
 
 ## Non-negotiable invariants
 
-- Authentication uses Supabase institutional-email/password accounts with confirmed email ownership. Authorization is separate and deny-by-default.
+- Authentication uses Supabase institutional-email/password accounts, domain-restricted and created pre-confirmed (no confirmation email); identity is verified by mandatory admin review of the uploaded college-ID image during onboarding rather than by confirming email ownership. Authorization is separate and deny-by-default.
 - A student must complete profile onboarding, submit a processed college-ID image, and receive admin approval before becoming an active member or accessing the catalog/borrowing workflows.
 - College-ID images are sensitive private objects: access is audited, only the applicant and membership administrators may view them as allowed by state, and the object is deleted 30 days after a final decision.
 - A borrowing request requires an authorized approval and an in-person, admin-confirmed handover.

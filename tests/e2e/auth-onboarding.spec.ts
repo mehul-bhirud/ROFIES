@@ -18,11 +18,9 @@ test("student can move through demo auth, onboarding, and pending lockout @criti
   await page.getByRole("textbox", { name: "Create password" }).fill("CorrectHorse42!");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(
-    page.getByRole("heading", { name: "Check your institutional inbox." })
+    page.getByRole("heading", { name: "Return to the equipment bench." })
   ).toBeVisible();
-  await expect(page.getByText("If that address can be registered")).toBeVisible();
 
-  await page.goto("/auth/sign-in");
   await page.getByLabel("Institutional email").fill("anaya.kulkarni@iiitp.ac.in");
   await page.getByRole("textbox", { name: "Password" }).fill("CorrectHorse42!");
   await page.getByRole("button", { name: "Sign in" }).click();

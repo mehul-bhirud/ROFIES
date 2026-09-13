@@ -82,10 +82,10 @@ Privileged roles are composable. Authorization is checked in the UI, in server-s
 
 The registration lifecycle is:
 
-`Email/password submitted → Email confirmation required → Profile and ID upload → Pending admin review → Active member | Changes requested | Rejected`
+`Email/password submitted → Profile and ID upload → Pending admin review → Active member | Changes requested | Rejected`
 
 - Registration accepts only a configured institutional email domain. The server revalidates the normalized domain during onboarding and protected actions.
-- The student confirms email ownership through Supabase Auth before completing onboarding.
+- The account is created pre-confirmed (no confirmation email is sent); identity is verified by admin review of the uploaded college-ID image rather than by confirming email ownership.
 - Required profile fields are full name, student ID, department, and academic year; phone is optional.
 - The student uploads one JPEG, PNG, or WebP college-ID image. The server validates decoded type, dimensions, and size; re-encodes it; strips unnecessary metadata; and stores it under a generated name in a dedicated private Supabase Storage bucket.
 - PostgreSQL stores only the object reference, processing metadata, application state, decision, reviewer, timestamps, retention deadline, and audit history—not the image bytes.

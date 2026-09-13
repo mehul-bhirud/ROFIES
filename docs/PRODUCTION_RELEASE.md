@@ -15,7 +15,7 @@ Do not run `supabase/seed.sql` against production. Seed data is fictional local/
 - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from the production Supabase project.
 - Set `SUPABASE_SERVICE_ROLE_KEY` only in server-side Vercel environment variables.
 - Set a strong `CRON_SECRET` only in server-side Vercel environment variables.
-- Configure Supabase Auth email/password, site URL, allowed redirect URLs, and password protections. If email confirmation is enabled, configure institution SMTP. Password recovery uses the admin-reviewed manual reset queue.
+- Configure Supabase Auth email/password, site URL, allowed redirect URLs, and password protections. Accounts are created pre-confirmed by the app (via the service-role admin API), so no signup confirmation email is sent; institution SMTP is not required for registration. Password recovery uses the admin-reviewed manual reset queue.
 - Keep `college-ids` and `equipment-photos` storage buckets private.
 - Schedule `POST /api/jobs/retention` with `Authorization: Bearer <CRON_SECRET>`.
 - Configure backups, storage retention expectations, and alert destinations before admitting real users.
@@ -119,7 +119,7 @@ The application has one hardcoded developer email exception, `mehul.c.bhirud@gma
 
 After deployment, test these with real production configuration:
 
-1. Sign up with an institutional email and confirm it if Supabase email confirmation is enabled.
+1. Sign up with an institutional email, then sign in directly (no confirmation email is sent).
 2. Submit onboarding with a small valid college-ID image.
 3. Approve that application as a membership manager.
 4. Submit a borrowing request as the approved member.
