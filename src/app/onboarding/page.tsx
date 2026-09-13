@@ -9,7 +9,7 @@ import {
 import { signOutAction } from "@/lib/auth/actions";
 import { validateInstitutionalEmail } from "@/lib/auth/identity";
 import { getServerEnvironment } from "@/lib/env/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser, getMemberApplicationStatus } from "@/lib/auth/session";
 import { MemberApplicationForm } from "@/components/onboarding/member-application-form";
 
 export const metadata: Metadata = { title: "Membership onboarding" };
@@ -80,17 +80,16 @@ function OnboardingSurface({
 export default async function OnboardingPage() {
   const environment = getServerEnvironment();
   if (environment.demoMode) return <OnboardingSurface mode="initial" />;
-  const client = await createSupabaseServerClient();
-  if (!client) redirect("/auth/error?code=application_unavailable");
-  const { data: authData } = await client.auth.getUser();
-  if (!authData.user) redirect("/auth/sign-in");
-  const { data, error } = await client.schema("api").rpc("member_application_status");
-  const status = error ? null : parseMemberApplicationStatus(data);
+  if (!environment.supabaseConfigured) redirect("/auth/error?code=application_unavailable");
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/sign-in");
+  const data = await getMemberApplicationStatus();
+  const status = parseMemberApplicationStatus(data);
   if (!status) redirect("/auth/error?code=application_access");
   const destination = applicationDestination({
     emailConfirmed:
-      Boolean(authData.user.email_confirmed_at) &&
-      validateInstitutionalEmail(authData.user.email ?? "", environment.allowedEmailDomains),
+      Boolean(user.email_confirmed_at) &&
+      validateInstitutionalEmail(user.email ?? "", environment.allowedEmailDomains),
     active: status?.membershipStatus === "active",
     applicationState: status.state
   });

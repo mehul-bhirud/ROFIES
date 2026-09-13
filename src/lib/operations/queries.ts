@@ -2,6 +2,12 @@ import "server-only";
 import { cache } from "react";
 import { getServerEnvironment } from "@/lib/env/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getCapabilities,
+  getCurrentUser,
+  getMemberApplicationStatus,
+  getProfileSummary
+} from "@/lib/auth/session";
 import { demoActivity, demoApprovalQueue, demoMemberRequests, demoSummary } from "@/lib/demo-data";
 import type { OperationalSummary } from "@/lib/catalog/types";
 
@@ -129,8 +135,8 @@ export const getAccountContext = cache(
         unreadNotifications: 0,
         environmentLabel: environment.ROFIES_ENVIRONMENT
       };
-    const { data: userData } = await client.auth.getUser();
-    const userId = userData.user?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId)
       return {
         displayName: "Signed-out",
@@ -140,25 +146,19 @@ export const getAccountContext = cache(
         environmentLabel: environment.ROFIES_ENVIRONMENT
       };
 
-    const [{ data: profile }, { count }, { data: roles }, { data: status }] = await Promise.all([
-      client.from("profiles").select("display_name,active").eq("id", userId).maybeSingle(),
+    const [profile, { count }, capabilityList, status] = await Promise.all([
+      getProfileSummary(userId),
       client
         .from("notifications")
         .select("id", { count: "exact", head: true })
         .eq("recipient_id", userId)
         .is("read_at", null)
         .is("archived_at", null),
-      client
-        .from("role_assignments")
-        .select("capability")
-        .eq("profile_id", userId)
-        .is("revoked_at", null),
-      client.schema("api").rpc("member_application_status")
+      getCapabilities(userId),
+      getMemberApplicationStatus()
     ]);
-    const displayName = String(
-      profile?.display_name ?? userData.user?.email ?? "R.O.F.I.E.S member"
-    );
-    const capabilities = new Set((roles ?? []).map((role) => String(role.capability)));
+    const displayName = String(profile?.displayName ?? user.email ?? "R.O.F.I.E.S member");
+    const capabilities = new Set(capabilityList);
     const applicationState =
       status && typeof status === "object" && "state" in status ? String(status.state) : null;
     let roleLabel = "Applicant";
@@ -200,8 +200,8 @@ export const getOwnProfile = cache(async (): Promise<OwnProfileRecord | null> =>
 
   const client = await createSupabaseServerClient();
   if (!client) return null;
-  const { data: userData } = await client.auth.getUser();
-  const userId = userData.user?.id;
+  const user = await getCurrentUser();
+  const userId = user?.id;
   if (!userId) return null;
 
   const [{ data: profile, error: profileError }, { data: membership }, { data: roles }] =
